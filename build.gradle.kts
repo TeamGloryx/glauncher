@@ -17,6 +17,7 @@ repositories {
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://dev.gloryx.net/main")
+    maven("https://dev.gloryx.net/snap")
     maven("https://repo.u-team.info")
 }
 
@@ -37,6 +38,9 @@ kotlin {
                 implementation("commons-codec:commons-codec:1.15")
                 implementation("org.spongepowered:configurate-hocon:4.1.2")
                 implementation("net.gloryx:cat:0.1.52-SNAPSHOT")
+                implementation("net.gloryx:oknamer:0.1.02-SNAPSHOT")
+                implementation("com.electronwill.night-config:core:3.6.6")
+                implementation("com.electronwill.night-config:hocon:3.6.6")
                 implementation("io.ktor:ktor-client-core-jvm:$ktor")
                 implementation("io.ktor:ktor-client-okhttp:$ktor")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.4.0")

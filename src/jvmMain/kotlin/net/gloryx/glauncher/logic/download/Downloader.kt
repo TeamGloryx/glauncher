@@ -31,7 +31,6 @@ object Downloader {
                     else job.destination.writeBytes(body.bytes())
                 }
             } ?: println("[Download] ${job.url} failed.".also { t -> Console.text += t })
-            println("dw end")
         }
     }
 

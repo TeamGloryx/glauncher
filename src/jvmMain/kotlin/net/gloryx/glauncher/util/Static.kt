@@ -1,6 +1,8 @@
 package net.gloryx.glauncher.util
 
+import androidx.compose.material.darkColors
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.graphics.Color
 import cat.reflect.safeCast
 import cat.try_
 import kotlinx.coroutines.CoroutineScope
@@ -15,4 +17,6 @@ object Static {
     lateinit var scope: CoroutineScope
 
     val scopen get() = try_ { scope }
+
+    val colors = darkColors(color(0x00ffaf), secondary = color(0x08afd), surface = Color.DarkGray)
 }

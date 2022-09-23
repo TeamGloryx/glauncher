@@ -1,9 +1,13 @@
 package net.gloryx.glauncher.util
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import cat.f
 
 val RowScope.w1 get() = Modifier.weight(1f)
@@ -22,5 +26,12 @@ fun RowScope.Spacer(width: Dp) = Spacer(Modifier.width(width))
 fun ColumnScope.Spacer(height: Dp) = Spacer(Modifier.height(height))
 
 @Composable
-fun GButton(click: () -> Unit = {}, icon: (@Composable () -> Unit)? = null, content: @Composable () -> Unit = {}) {
+fun GButton(click: () -> Unit = {}, modifier: Modifier = Modifier, icon: (@Composable () -> Unit)? = null, colors: ButtonColors = ButtonDefaults.buttonColors(), enabled: Boolean = true, content: @Composable RowScope.() -> Unit = {}) {
+    Button(click, enabled = enabled, colors = colors) {
+        icon?.let {
+            it()
+            Spacer(2.dp)
+        }
+        content()
+    }
 }

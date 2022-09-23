@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import net.gloryx.glauncher.util.Static
 
 object Console {
     var text by mutableStateOf(
@@ -31,27 +33,39 @@ object Console {
 @Composable
 fun ConsoleComponent() {
     val scroll = rememberScrollState(0)
-    Row(Modifier.border(
-        3.dp,
-        MaterialTheme.colors.primarySurface
-    ).fillMaxWidth().requiredHeight(200.dp)) {
-        SelectionContainer(Modifier.verticalScroll(scroll).fillMaxSize()) {
-            BasicText(
-                Console.text,
-                modifier = Modifier.padding(6.dp).wrapContentWidth(Alignment.Start, false),
-                overflow = TextOverflow.Ellipsis,
-                style = TextStyle(MaterialTheme.colors.onSurface)
-            )
+
+    var dialog by remember { mutableStateOf(true) }
+
+    if (dialog)
+        Dialog({ dialog = false }) {
+            MaterialTheme(colors = Static.colors) {
+                Row(
+                    Modifier.border(
+                        3.dp,
+                        MaterialTheme.colors.primarySurface
+                    ).fillMaxWidth().requiredHeight(200.dp)
+                ) {
+                    SelectionContainer(Modifier.verticalScroll(scroll).fillMaxSize()) {
+                        BasicText(
+                            Console.text,
+                            modifier = Modifier.padding(6.dp).wrapContentWidth(Alignment.Start, false),
+                            overflow = TextOverflow.Ellipsis,
+                            style = TextStyle(MaterialTheme.colors.onSurface)
+                        )
+                    }
+                    VerticalScrollbar(
+                        rememberScrollbarAdapter(scroll),
+                        Modifier.weight(1f),
+                        false,
+                        defaultScrollbarStyle().copy(
+                            thickness = 30.dp,
+                            unhoverColor = Color.White,
+                            hoverColor = MaterialTheme.colors.primarySurface
+                        )
+                    )
+                }
+            }
         }
-        VerticalScrollbar(
-            rememberScrollbarAdapter(scroll),
-            Modifier.weight(1f),
-            false,
-            defaultScrollbarStyle().copy(
-                thickness = 30.dp,
-                unhoverColor = Color.White,
-                hoverColor = MaterialTheme.colors.primarySurface
-            )
-        )
-    }
+
+
 }
