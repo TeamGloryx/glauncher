@@ -1,4 +1,4 @@
-package net.gloryx.glauncher.util.lang
+package net.gloryx.glauncher.util.res.lang
 
 import net.gloryx.oknamer.key.kinds.LangKey
 

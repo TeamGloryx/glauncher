@@ -1,4 +1,4 @@
-package net.gloryx.glauncher.util.lang
+package net.gloryx.glauncher.util.res.lang
 
 import androidx.compose.ui.text.intl.Locale
 import com.typesafe.config.ConfigFactory

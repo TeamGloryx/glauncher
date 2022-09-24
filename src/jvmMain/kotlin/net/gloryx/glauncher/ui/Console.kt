@@ -28,13 +28,15 @@ object Console {
             ) { "A" }.joinToString("\n")
         }"
     )
+
+    val dialog = mutableStateOf(false)
 }
 
 @Composable
 fun ConsoleComponent() {
     val scroll = rememberScrollState(0)
 
-    var dialog by remember { mutableStateOf(true) }
+    var dialog by Console.dialog
 
     if (dialog)
         Dialog({ dialog = false }) {

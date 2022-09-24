@@ -8,8 +8,9 @@ import java.io.File
 import java.net.URL
 
 data class DownloadJob(val url: URL, val destination: File = Static.root.resolve("./assets")) {
+    constructor(destDir: String, url: URL) : this(url, Static.root.resolve(destDir).resolve(url.file.split('/').last()).also(::println))
     init {
-        if (!destination.parentFile.exists()) destination.parentFile.mkdirs()
+        if (destination.parentFile?.exists() == false) destination.parentFile?.mkdirs()
         if (!destination.exists())
             destination.createNewFile()
     }

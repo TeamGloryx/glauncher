@@ -35,3 +35,7 @@ fun GButton(click: () -> Unit = {}, modifier: Modifier = Modifier, icon: (@Compo
         content()
     }
 }
+
+object GColors {
+    val snackbar = color(0x222222)
+}

@@ -19,6 +19,7 @@ repositories {
     maven("https://dev.gloryx.net/main")
     maven("https://dev.gloryx.net/snap")
     maven("https://repo.u-team.info")
+    maven("https://maven.fabricmc.net")
 }
 
 kotlin {
@@ -45,6 +46,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-okhttp:$ktor")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+                implementation("net.fabricmc:fabric-installer:0.11.1")
             }
         }
         val jvmTest by getting

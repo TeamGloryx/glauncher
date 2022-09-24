@@ -16,7 +16,7 @@ import java.util.zip.ZipInputStream
 
 
 object Assets {
-    val dir get() = Static.root.resolve("./strangeness").apply { mkdirs() }
+    val dir get() = Static.root.resolve(".strangeness").apply { mkdirs() }
     suspend fun prepare(target: LaunchTarget) {
         val name = target.name.lowercase()
         val td = dir.resolve("./$name")
