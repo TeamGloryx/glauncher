@@ -11,4 +11,6 @@ object Secret {
     val secret: String = URLEncoder.encode("QDd8Q~e5YYknXmT55jZwrch_XE3AEWHTWRBL7bpJ", Charsets.UTF_8) //hcl.getString("secret")
 
     const val FILE = "./secret.json"
+
+    const val accessToken = "gloryx_net"
 }

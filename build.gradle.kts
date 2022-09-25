@@ -47,6 +47,8 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
                 implementation("net.fabricmc:fabric-installer:0.11.1")
+                implementation("org.jetbrains.exposed:exposed-core:0.39.2")
+                implementation("org.jetbrains.exposed:exposed-jdbc:0.39.2")
             }
         }
         val jvmTest by getting

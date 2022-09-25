@@ -9,10 +9,17 @@ import kotlinx.serialization.json.*
 import net.gloryx.glauncher.model.Mods
 import net.gloryx.glauncher.model.MojangLinker
 import net.gloryx.glauncher.util.*
+import net.gloryx.glauncher.util.db.DB
+import net.gloryx.glauncher.util.db.sql.AuthTable
 import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
+import net.gloryx.glauncher.util.state.Auth
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.io.FileInputStream
+import java.util.UUID
 
 private val json = Json {
     isLenient = true
@@ -47,6 +54,18 @@ enum class LaunchTarget(
                 }" // net.fabricmc:fabric-loader:0.14.9 -> net/fabricmc/fabric-loader/fabric-loader-0.1.49.jar
             })
             add("versions/$verDir/$verDir.jar")
+        }
+
+        override val mcArgs: MutableList<String> = run {
+            val args = mutableListOf<String>()
+
+            // Auth
+            args += "--username ${Auth.ign}"
+            args += "--accessToken ${Secret.accessToken}" // constant
+
+
+
+            args
         }
     };
 
@@ -91,10 +110,10 @@ enum class LaunchTarget(
             val aad = dir.resolve("assets").absolutePath
 
             mapping.forEach { (a, b) ->
-                args.findOneAndReplace({ (w, d) -> d.contains(a) }) { (q, it) ->q to it.replace("\${$q}", b) }
+                args.findOneAndReplace({ (w, d) -> d.contains(a) }) { (q, it) -> q to it.replace("\${$q}", b) }
             }
 
-            list.addAll(args)
+            //list.addAll(args)
         }
         list
     }
@@ -106,6 +125,8 @@ enum class LaunchTarget(
         it.add("versions/$verDir/$verDir.jar")
     }
 
+    open val jvmArgs: List<String> = listOf()
+
     private fun getCp(list: MutableList<String>, file: File) {
         if (file.isDirectory) {
             for (i in file.listFiles()!!) {
@@ -115,6 +136,21 @@ enum class LaunchTarget(
             if (file.extension == "jar") {
                 list.add(file.toRelativeString(Static.root))
             }
+        }
+    }
+
+    companion object {
+        fun genUUID(): UUID {
+            var id = UUID.randomUUID()
+            val uuids = transaction {
+                AuthTable.selectAll().map { it[AuthTable.uuid] }
+            }
+
+            while (id in uuids) {
+                id = UUID.randomUUID()
+            }
+
+            return id
         }
     }
 }
