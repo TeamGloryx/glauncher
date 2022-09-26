@@ -1,13 +1,21 @@
 package net.gloryx.glauncher.util.db
 
 import net.gloryx.glauncher.util.db.sql.AuthTable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import net.gloryx.glauncher.util.db.sql.AuthTable.hash
+import net.gloryx.glauncher.util.db.sql.AuthTable.ip
+import net.gloryx.glauncher.util.db.sql.AuthTable.nickname
+import net.gloryx.glauncher.util.db.sql.AuthTable.uuid
+import net.gloryx.glauncher.util.db.sql.AuthUser
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object DB {
     object Sql {
-        val db = Database.connect("jdbc:mysql://u1_O4iRUkk7YG:kP+lTz+OSH8nHENdT+7PpFDW@88.198.32.250:3306/s1_auth")
+        val db = Database.connect("jdbc:mysql://88.198.32.250:3306/s1_auth", user = "u1_O4iRUkk7YG", password = "kP+lTz+OSH8nHENdT+7PpFDW")
+    }
+
+    val users get() = transaction(Sql.db) {
+        addLogger(StdOutSqlLogger)
+        AuthTable.selectAll().map { AuthUser(it[uuid], it[ip], it[hash], it[nickname]) }
     }
 }

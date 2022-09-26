@@ -49,6 +49,10 @@ kotlin {
                 implementation("net.fabricmc:fabric-installer:0.11.1")
                 implementation("org.jetbrains.exposed:exposed-core:0.39.2")
                 implementation("org.jetbrains.exposed:exposed-jdbc:0.39.2")
+                implementation("mysql:mysql-connector-java:8.0.30")
+                implementation("at.favre.lib:bcrypt:0.9.0")
+                implementation("me.nullicorn:ms-to-mca:0.0.1")
+                implementation("com.microsoft.azure:msal4j:1.10.1")
             }
         }
         val jvmTest by getting

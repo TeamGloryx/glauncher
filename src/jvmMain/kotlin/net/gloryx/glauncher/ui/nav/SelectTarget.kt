@@ -16,13 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -32,11 +28,8 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import net.gloryx.glauncher.logic.target.LaunchTarget
-import net.gloryx.glauncher.util.Spacer
-import net.gloryx.glauncher.util.state.Auth
+import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
-import org.jetbrains.skia.Image
-import org.jetbrains.skia.ImageFilter
 
 @OptIn(ExperimentalUnitApi::class)
 @Composable
@@ -48,7 +41,7 @@ fun SelectTarget() {
             val isSelected by derivedStateOf { MainScreen.selected == it }
             Card(
                 Modifier
-                    .clickable(Auth.isAuthenticated && !isSelected, "Launch $name!", Role.Button) {
+                    .clickable(AuthState.isAuthenticated && !isSelected, "Launch $name!", Role.Button) {
                         MainScreen.selected = it
                     }
                     .indication(

@@ -6,6 +6,8 @@ import cat.collections.findOneAndReplace
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.*
+import net.gloryx.glauncher.logic.Launcher
+import net.gloryx.glauncher.logic.auth.NotAuthenticatedException
 import net.gloryx.glauncher.model.Mods
 import net.gloryx.glauncher.model.MojangLinker
 import net.gloryx.glauncher.util.*
@@ -13,9 +15,10 @@ import net.gloryx.glauncher.util.db.DB
 import net.gloryx.glauncher.util.db.sql.AuthTable
 import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
-import net.gloryx.glauncher.util.state.Auth
+import net.gloryx.glauncher.util.state.AuthState
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.io.FileInputStream
@@ -36,7 +39,9 @@ enum class LaunchTarget(
     SMP("1_19_1", "Survival", P.Main.skyblock, "fabric") {
         override suspend fun run() {
             println("launch target running")
-            Mods.Fabric("1.19.1").run(this)
+            Mods.Fabric("1.19.1").install(this)
+
+            Launcher.start(this)
         }
 
         override val verDir: String = "fabric-loader-0.14.9-1.19.1"
@@ -50,19 +55,19 @@ enum class LaunchTarget(
             addAll(mf.libraries.map {
                 "libraries/${it.name.split(':').joinToString("/")}/${
                     it.name.split(':')
-                        .let { ls -> "${ls[1]}-${ls[2]}.jar" }
+                        .let { ls -> "${ls[1]}-${ls[2]}${if (ls.size == 4) "-${ls[3]}" else ""}.jar" }
                 }" // net.fabricmc:fabric-loader:0.14.9 -> net/fabricmc/fabric-loader/fabric-loader-0.1.49.jar
             })
             add("versions/$verDir/$verDir.jar")
         }
 
-        override val mcArgs: MutableList<String> = run {
+        override val mcArgs: MutableList<String> get() = run {
             val args = mutableListOf<String>()
 
             // Auth
-            args += "--username ${Auth.ign}"
+            args += "--username ${AuthState.ign}"
             args += "--accessToken ${Secret.accessToken}" // constant
-
+            args += "--uuid ${getUUID(AuthState.ign)}"
 
 
             args
@@ -70,6 +75,10 @@ enum class LaunchTarget(
     };
 
     open suspend fun run() {}
+
+    protected fun checkPassword() {
+
+    }
 
     val normalName = normalName ?: name.capitalize(LocalLocale)
 
@@ -139,18 +148,19 @@ enum class LaunchTarget(
         }
     }
 
-    companion object {
-        fun genUUID(): UUID {
-            var id = UUID.randomUUID()
-            val uuids = transaction {
-                AuthTable.selectAll().map { it[AuthTable.uuid] }
-            }
+    fun getUUID(ign: String? = AuthState.ign): UUID {
+        if (!AuthState.isAuthenticated) throw NotAuthenticatedException()
+        var id = UUID.randomUUID()
+        val uuids = DB.users.associate { it.nickname to it.uuid }
 
-            while (id in uuids) {
-                id = UUID.randomUUID()
-            }
-
-            return id
+        if (ign != null && uuids.containsKey(ign)) {
+            return uuids[ign]!!
         }
+
+        while (uuids.containsValue(id)) {
+            id = UUID.randomUUID()
+        }
+
+        return id
     }
 }

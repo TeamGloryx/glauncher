@@ -2,7 +2,6 @@ package net.gloryx.glauncher.model
 
 import kotlinx.serialization.Serializable
 import net.fabricmc.installer.LoaderVersion
-import net.fabricmc.installer.Main
 import net.fabricmc.installer.client.ClientInstaller
 import net.fabricmc.installer.util.InstallerProgress
 import net.fabricmc.installer.util.MetaHandler
@@ -10,12 +9,12 @@ import net.gloryx.glauncher.logic.target.LaunchTarget
 
 object Mods {
     interface Conf {
-        suspend fun run(target: LaunchTarget)
+        suspend fun install(target: LaunchTarget)
     }
 
     @Serializable
     data class Fabric(val version: String, val loaderVersion: String? = null) : Conf {
-        override suspend fun run(target: LaunchTarget) {
+        override suspend fun install(target: LaunchTarget) {
             println("Fabric running with $version and $loaderVersion")
             if (target.dir.resolve("versions").listFiles()!!.first().let { it.resolve("${it.name}.jar") }
                     .exists()) return println("Fabric is already installed.")

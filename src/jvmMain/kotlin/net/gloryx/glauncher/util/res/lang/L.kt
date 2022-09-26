@@ -15,6 +15,7 @@ import kotlin.reflect.KProperty
 
 object L : La(Namespaced("launcher")) {
     val test by null
+    val logIn by null
 }
 
 sealed class La(namespace: Namespaced) : Namespaced by namespace {

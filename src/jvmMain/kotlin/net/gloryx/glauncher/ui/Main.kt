@@ -1,7 +1,6 @@
 package net.gloryx.glauncher.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,22 +12,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import net.gloryx.glauncher.logic.Launcher
 import net.gloryx.glauncher.logic.download.Downloader
+import net.gloryx.glauncher.ui.auth.AuthDialog
 import net.gloryx.glauncher.ui.nav.SelectTarget
 import net.gloryx.glauncher.ui.nav.TargetNav
 import net.gloryx.glauncher.util.GColors
 import net.gloryx.glauncher.util.Spacer
 import net.gloryx.glauncher.util.Static
-import net.gloryx.glauncher.util.color
 import net.gloryx.glauncher.util.res.lang.L
 import net.gloryx.glauncher.util.res.lang.Language
 import net.gloryx.glauncher.util.res.lang.withLanguage
 import net.gloryx.glauncher.util.state.MainScreen
-import java.awt.Color.red
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -71,6 +68,7 @@ fun Main() {
                     Text("Play!")
                 }
             }) { pad ->
+                AuthDialog()
                 Column(Modifier.padding(pad)) {
                     SelectTarget()
                 }

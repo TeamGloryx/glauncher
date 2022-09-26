@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.SharedFlow
+import java.io.File
 import kotlin.reflect.KProperty
 
 val Any?.void get() = Unit
@@ -56,3 +57,6 @@ fun String.camelToSnake(): String {
 val coro get() = Static.scope
 
 suspend fun waitFor(step: Long = 500, expr: () -> Boolean) { while (!expr()) delay(step) }
+
+operator fun File.getValue(that: Any?, prop: KProperty<*>) = readText()
+operator fun File.setValue(that: Any?, prop: KProperty<*>, data: String) = writeText(data)
