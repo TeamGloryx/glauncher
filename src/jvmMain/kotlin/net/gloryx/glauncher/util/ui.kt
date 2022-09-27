@@ -1,14 +1,14 @@
 package net.gloryx.glauncher.util
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cat.f
+import kotlinx.coroutines.launch
+import net.gloryx.glauncher.util.state.MainScreen
 
 val RowScope.w1 get() = Modifier.weight(1f)
 val ColumnScope.w1 get() = Modifier.weight(1f)
@@ -36,6 +36,23 @@ fun GButton(click: () -> Unit = {}, modifier: Modifier = Modifier, icon: (@Compo
     }
 }
 
+@Composable fun <T> Suspense(operation: @DisallowComposableCalls suspend () -> T, fallback: @Composable () -> Unit = { Text("Please wait...") }, content: @Composable (T) -> Unit) {
+    val (it, set) = mutableStateOf<T?>(null)
+
+    rememberCoroutineScope().launch {
+        set(operation())
+    }
+
+    it?.let { value -> content(value) } ?: fallback()
+}
+
 object GColors {
     val snackbar = color(0x222222)
+}
+
+fun snackbar(message: String, dismissButton: String = "Dismiss", duration: SnackbarDuration = SnackbarDuration.Short, callback: suspend () -> Unit = {}) {
+    coro.launch {
+        MainScreen.scaffold?.snackbarHostState?.showSnackbar(message, dismissButton, duration)
+        callback()
+    }
 }

@@ -16,6 +16,7 @@ import net.gloryx.glauncher.util.db.sql.AuthTable
 import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
 import net.gloryx.glauncher.util.state.AuthState
+import net.gloryx.glauncher.util.state.AuthState.getUUID
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
@@ -146,21 +147,5 @@ enum class LaunchTarget(
                 list.add(file.toRelativeString(Static.root))
             }
         }
-    }
-
-    fun getUUID(ign: String? = AuthState.ign): UUID {
-        if (!AuthState.isAuthenticated) throw NotAuthenticatedException()
-        var id = UUID.randomUUID()
-        val uuids = DB.users.associate { it.nickname to it.uuid }
-
-        if (ign != null && uuids.containsKey(ign)) {
-            return uuids[ign]!!
-        }
-
-        while (uuids.containsValue(id)) {
-            id = UUID.randomUUID()
-        }
-
-        return id
     }
 }

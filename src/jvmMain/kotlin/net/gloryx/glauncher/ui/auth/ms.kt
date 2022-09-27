@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -45,26 +46,28 @@ object Microsoft {
         val di = rememberDialogState(size = DpSize(300.dp, 300.dp))
 
         if (state) Dialog({ state = false }, title = "Log in to your Microsoft account!", state = di) {
-            Box(Modifier.fillMaxSize().background(Static.colors.background)) {
-                Column {
-                    var ar: IAuthenticationResult? by mutableStateOf(null)
-                    rememberCoroutineScope().launch {
-                        ar = acquireToken()
-                        authCode = ar!!.accessToken()
-                    }
-                    if (code != null) {
-                        val dc = code!!
-                        SelectionContainer {
-                            Text(dc.userCode(), textAlign = TextAlign.Center)
-                        }
-                        Button({
-                            val ss = StringSelection(dc.userCode())
-                            Toolkit.getDefaultToolkit().systemClipboard.setContents(ss, ss)
+            MaterialTheme(Static.colors) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
+                    Column {
+                        if (authCode == null) {
+                            Suspense({
+                                acquireToken().also { authCode = it.accessToken() }
+                            }, { Text("Please wait......") }) {
 
-                            Desktop.getDesktop().browse(URI(dc.verificationUri()))
-                        }) {
-                            Text("Copy the code and log in")
-                        }
+                                val dc = code!!
+                                SelectionContainer {
+                                    Text(dc.userCode(), textAlign = TextAlign.Center)
+                                }
+                                Button({
+                                    val ss = StringSelection(dc.userCode())
+                                    Toolkit.getDefaultToolkit().systemClipboard.setContents(ss, ss)
+
+                                    Desktop.getDesktop().browse(URI(dc.verificationUri()))
+                                }) {
+                                    Text("Copy the code and log in")
+                                }
+                            }
+                        } else state = false
                     }
                 }
             }
@@ -74,13 +77,15 @@ object Microsoft {
 
     @PublishedApi
     internal suspend inline fun acquireToken(): IAuthenticationResult {
-        val cli = PublicClientApplication.builder(Secret.clientId).authority(authority).setTokenCacheAccessAspect(Cache)
+        val cli = PublicClientApplication.builder(Secret.clientId)
+            .authority(authority)
+            .setTokenCacheAccessAspect(Cache)
             .build()
         val cached = cli.accounts.await()
         val account = cached.firstOrNull()
 
         val result: IAuthenticationResult = try {
-            val sp = SilentParameters.builder(Secret.SCOPE, account).authorityUrl(authority).build()
+            val sp = SilentParameters.builder(Secret.SCOPE, account).forceRefresh(true).authorityUrl(authority).build()
 
             cli.acquireTokenSilently(sp).await()
         } catch (rethrow: Exception) {
@@ -107,17 +112,18 @@ object Microsoft {
     }
 
     object Cache : ITokenCacheAccessAspect {
-        private val file =
-            Static.root.resolve(".strangeness/.inliner/.sh").also(File::mkdirs).resolve(".d.snow")
-                .also(File::createNewFile)
+        private val file = Static.root.resolve(".strangeness/.inliner/.sh").also(File::mkdirs).resolve(".d.snow")
+            .also(File::createNewFile)
         var data by this.file
 
         override fun afterCacheAccess(ac: ITokenCacheAccessContext) {
             ac.tokenCache().deserialize(data)
+            println("cache hit - write")
         }
 
         override fun beforeCacheAccess(ac: ITokenCacheAccessContext) {
             data = ac.tokenCache().serialize()
+            println("cache hit - read")
         }
     }
 }

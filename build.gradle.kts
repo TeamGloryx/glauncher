@@ -21,6 +21,9 @@ repositories {
     maven("https://repo.u-team.info")
     maven("https://maven.fabricmc.net")
 }
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+}
 
 kotlin {
     jvm {
@@ -53,6 +56,9 @@ kotlin {
                 implementation("at.favre.lib:bcrypt:0.9.0")
                 implementation("me.nullicorn:ms-to-mca:0.0.1")
                 implementation("com.microsoft.azure:msal4j:1.10.1")
+                implementation("org.jetbrains.compose.ui:ui-graphics-desktop:1.1.0")
+                implementation("org.jetbrains.compose.ui:ui-geometry-desktop:1.1.0")
+                implementation("org.jetbrains.compose.foundation:foundation-desktop:1.1.0")
             }
         }
         val jvmTest by getting

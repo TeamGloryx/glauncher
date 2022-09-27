@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -25,13 +26,13 @@ import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.res.lang.L
 import net.gloryx.glauncher.util.res.lang.Language
 import net.gloryx.glauncher.util.res.lang.withLanguage
+import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun Main() {
-    val Lang = Language.from(Locale.current)
+    val lang = Language.from(Locale.current)
     val coro = rememberCoroutineScope()
 
     Static.scope = coro
@@ -39,7 +40,7 @@ fun Main() {
 
     val scaffold = rememberScaffoldState().also { MainScreen.scaffold = it }
 
-    withLanguage(Lang) {
+    withLanguage(lang) {
         MaterialTheme(Static.colors) {
             Scaffold(scaffoldState = scaffold, snackbarHost = { sh ->
                 SnackbarHost(sh) { data ->
@@ -52,11 +53,18 @@ fun Main() {
             }, bottomBar = {
                 BottomAppBar(elevation = 20.dp) {
                     Button({
-                        // TODO Login
+                        AuthState.authDialog = true
                     }) {
                         Icon(Icons.Rounded.Person, "Log in")
                         Spacer(2.dp)
-                        Text("Log in")
+                        Text(if (AuthState.isAuthenticated) "Logged in as ${AuthState.ign}" else "Log in")
+                    }
+                    Button({
+                        Console.dialog.value = true
+                    }) {
+                        Icon(Icons.Rounded.Settings, "Console")
+                        Spacer(2.dp)
+                        Text("Console")
                     }
                 }
             }, isFloatingActionButtonDocked = true, floatingActionButton = {
@@ -71,6 +79,7 @@ fun Main() {
                 AuthDialog()
                 Column(Modifier.padding(pad)) {
                     SelectTarget()
+                    ConsoleComponent()
                 }
             }
         }

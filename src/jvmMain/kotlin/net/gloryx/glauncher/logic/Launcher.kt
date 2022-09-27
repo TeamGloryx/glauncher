@@ -1,7 +1,9 @@
 package net.gloryx.glauncher.logic
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
@@ -11,7 +13,7 @@ object Launcher {
     suspend fun launch(target: LaunchTarget) {
         println("Launching $target")
         if (!AuthState.isAuthenticated) {
-            MainScreen.scaffold?.snackbarHostState?.showSnackbar("You are not authenticated!", "Dismiss")
+            MainScreen.scaffold?.snackbarHostState?.showSnackbar("You are not authenticated!", "Authenticate")
             AuthState.authDialog = true
             return
         }
@@ -30,7 +32,7 @@ object Launcher {
         }
     }
 
-    fun start(target: LaunchTarget) {
+    suspend fun start(target: LaunchTarget) {
         val dir = target.dir.absolutePath
         val args = mutableListOf("java")
         args += "-Djava.library.path=\"${target.natives}\""
@@ -46,8 +48,12 @@ object Launcher {
 
         args += target.mcArgs
 
-        val proc = ProcessBuilder().command(args)
+        val proc = ProcessBuilder().command(args).inheritIO()
 
         println(args)
+
+        withContext(Dispatchers.IO) {
+            proc.start()
+        }
     }
 }

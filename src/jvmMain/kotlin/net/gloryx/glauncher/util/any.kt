@@ -1,11 +1,16 @@
 package net.gloryx.glauncher.util
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.SharedFlow
 import java.io.File
+import java.io.OutputStream
+import java.nio.ByteBuffer
 import kotlin.reflect.KProperty
 
 val Any?.void get() = Unit
@@ -60,3 +65,14 @@ suspend fun waitFor(step: Long = 500, expr: () -> Boolean) { while (!expr()) del
 
 operator fun File.getValue(that: Any?, prop: KProperty<*>) = readText()
 operator fun File.setValue(that: Any?, prop: KProperty<*>, data: String) = writeText(data)
+
+class VarOutputStream(state: MutableState<String>) : OutputStream() {
+    var state by state
+    override fun write(b: Int) {
+        state += Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(byteArrayOf(b.toByte()))).toString()
+    }
+
+    override fun flush() {
+        
+    }
+}
