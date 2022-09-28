@@ -113,7 +113,7 @@ fun RealAuth() {
                     AuthState.ign = currIgn
                     AuthState.authDialog = false
                     snackbar("Successfully logged in!")
-                }, enabled = currIgn != null && (pwd.isNotBlank() || isPrem) && !canRegister) {
+                }, enabled = currIgn != null && (pwd.isNotBlank() || isPrem)) {
                     Text("Log in")
                 }
 

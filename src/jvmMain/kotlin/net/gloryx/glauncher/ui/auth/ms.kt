@@ -24,7 +24,6 @@ import com.microsoft.aad.msal4j.ITokenCacheAccessContext
 import com.microsoft.aad.msal4j.MsalException
 import com.microsoft.aad.msal4j.PublicClientApplication
 import com.microsoft.aad.msal4j.SilentParameters
-import kotlinx.coroutines.launch
 import me.nullicorn.msmca.minecraft.MinecraftAuth
 import me.nullicorn.msmca.minecraft.MinecraftToken
 import net.gloryx.glauncher.util.*
@@ -50,10 +49,14 @@ object Microsoft {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
                     Column {
                         if (authCode == null) {
-                            Suspense({
-                                acquireToken().also { authCode = it.accessToken() }
-                            }, { Text("Please wait......") }) {
-
+                            Suspense(
+                                mutableStateOf<IAuthenticationResult?>(null).also { cat.ui.Async { acquireToken(it).let { authCode = it.accessToken() } } },
+                                {
+                                    Text(
+                                        "Please wait......",
+                                        color = MaterialTheme.colors.onBackground
+                                    ); println("fallback")
+                                }) {
                                 val dc = code!!
                                 SelectionContainer {
                                     Text(dc.userCode(), textAlign = TextAlign.Center)
@@ -68,6 +71,7 @@ object Microsoft {
                                 }
                             }
                         } else state = false
+
                     }
                 }
             }
@@ -76,7 +80,7 @@ object Microsoft {
 
 
     @PublishedApi
-    internal suspend inline fun acquireToken(): IAuthenticationResult {
+    internal suspend inline fun acquireToken(state: MutableState<IAuthenticationResult?>): IAuthenticationResult {
         val cli = PublicClientApplication.builder(Secret.clientId)
             .authority(authority)
             .setTokenCacheAccessAspect(Cache)
@@ -90,7 +94,7 @@ object Microsoft {
             cli.acquireTokenSilently(sp).await()
         } catch (rethrow: Exception) {
             if (rethrow.cause is MsalException || account == null) {
-                val consume: (DeviceCode) -> Unit = { println(it.userCode()); println(it.verificationUri()); code = it }
+                val consume: (DeviceCode) -> Unit = { Static.out.println(it.userCode()); Static.out.println(it.verificationUri()); code = it }
                 val dfp = DeviceCodeFlowParameters.builder(Secret.SCOPE, consume).build()
 
                 cli.acquireToken(dfp).await()
@@ -98,6 +102,8 @@ object Microsoft {
                 throw rethrow
             }
         }
+
+        state.value = result
 
 
 

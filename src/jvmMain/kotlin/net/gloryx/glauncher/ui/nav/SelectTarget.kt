@@ -41,7 +41,7 @@ fun SelectTarget() {
             val isSelected by derivedStateOf { MainScreen.selected == it }
             Card(
                 Modifier
-                    .clickable(AuthState.isAuthenticated && !isSelected, "Launch $name!", Role.Button) {
+                    .clickable(!isSelected, "Launch $name!", Role.Button) {
                         MainScreen.selected = it
                     }
                     .indication(

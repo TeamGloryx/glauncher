@@ -18,10 +18,12 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://dev.gloryx.net/main")
     maven("https://dev.gloryx.net/snap")
+    mavenLocal()
     maven("https://repo.u-team.info")
     maven("https://maven.fabricmc.net")
 }
 dependencies {
+    implementation("net.gloryx.cat:ui:+")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 }
 
@@ -59,6 +61,7 @@ kotlin {
                 implementation("org.jetbrains.compose.ui:ui-graphics-desktop:1.1.0")
                 implementation("org.jetbrains.compose.ui:ui-geometry-desktop:1.1.0")
                 implementation("org.jetbrains.compose.foundation:foundation-desktop:1.1.0")
+                implementation("net.gloryx.cat:ui-jvm:+")
             }
         }
         val jvmTest by getting

@@ -40,7 +40,7 @@ fun Main() {
 
     val scaffold = rememberScaffoldState().also { MainScreen.scaffold = it }
 
-    withLanguage(lang) {
+    withLanguage(Language.RU_RU) {
         MaterialTheme(Static.colors) {
             Scaffold(scaffoldState = scaffold, snackbarHost = { sh ->
                 SnackbarHost(sh) { data ->

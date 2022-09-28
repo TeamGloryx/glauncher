@@ -24,7 +24,7 @@ import net.gloryx.glauncher.util.Static
 
 object Console {
     val textState = mutableStateOf(
-        "Gloryx Launcher by nothen@gloryx\n" + List(500) { "AAAAAAAAAAAAAAA" }.joinToString("\n")
+        "Gloryx Launcher by nothen@gloryx\n"
     )
     var text by textState
 
