@@ -3,13 +3,12 @@ package net.gloryx.glauncher.util.res.lang
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cat.ui.intl.Languages
 import net.gloryx.glauncher.util.camelToSnake
 import net.gloryx.oknamer.key.Key
 import net.gloryx.oknamer.key.Namespaced
 import net.gloryx.oknamer.key.dot
 import net.gloryx.oknamer.key.kinds.LangKey
-import java.util.*
-import java.util.Locale.forLanguageTag
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -36,6 +35,6 @@ sealed class La(namespace: Namespaced) : Namespaced by namespace {
     }
 
     companion object {
-        var Lang by mutableStateOf(Language.Default)
+        var Lang by mutableStateOf(Languages.Default)
     }
 }

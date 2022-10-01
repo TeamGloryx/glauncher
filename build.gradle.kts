@@ -1,4 +1,3 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -6,11 +5,13 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.0.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("plugin.serialization") version "1.7.10"
 }
 
 group = "net.gloryx"
 version = "1.0.0"
+
+val composeVersion = extra["compose.version"] as String
 
 repositories {
     google()
@@ -58,9 +59,9 @@ kotlin {
                 implementation("at.favre.lib:bcrypt:0.9.0")
                 implementation("me.nullicorn:ms-to-mca:0.0.1")
                 implementation("com.microsoft.azure:msal4j:1.10.1")
-                implementation("org.jetbrains.compose.ui:ui-graphics-desktop:1.1.0")
-                implementation("org.jetbrains.compose.ui:ui-geometry-desktop:1.1.0")
-                implementation("org.jetbrains.compose.foundation:foundation-desktop:1.1.0")
+                implementation("org.jetbrains.compose.ui:ui-graphics-desktop:$composeVersion")
+                implementation("org.jetbrains.compose.ui:ui-geometry-desktop:$composeVersion")
+                implementation("org.jetbrains.compose.foundation:foundation-desktop:$composeVersion")
                 implementation("net.gloryx.cat:ui-jvm:+")
             }
         }

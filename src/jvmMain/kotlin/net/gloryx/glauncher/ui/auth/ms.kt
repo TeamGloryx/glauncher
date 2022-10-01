@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.rememberDialogState
 import cat.async.await
+import cat.ui.Async
+import cat.ui.Suspense
 import com.microsoft.aad.msal4j.DeviceCode
 import com.microsoft.aad.msal4j.DeviceCodeFlowParameters
 import com.microsoft.aad.msal4j.IAuthenticationResult
@@ -26,7 +28,10 @@ import com.microsoft.aad.msal4j.PublicClientApplication
 import com.microsoft.aad.msal4j.SilentParameters
 import me.nullicorn.msmca.minecraft.MinecraftAuth
 import me.nullicorn.msmca.minecraft.MinecraftToken
-import net.gloryx.glauncher.util.*
+import net.gloryx.glauncher.util.Secret
+import net.gloryx.glauncher.util.Static
+import net.gloryx.glauncher.util.getValue
+import net.gloryx.glauncher.util.setValue
 import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -50,7 +55,13 @@ object Microsoft {
                     Column {
                         if (authCode == null) {
                             Suspense(
-                                mutableStateOf<IAuthenticationResult?>(null).also { cat.ui.Async { acquireToken(it).let { authCode = it.accessToken() } } },
+                                mutableStateOf<IAuthenticationResult?>(null).also {
+                                    Async {
+                                        acquireToken(it).let {
+                                            authCode = it.accessToken()
+                                        }
+                                    }
+                                },
                                 {
                                     Text(
                                         "Please wait......",
@@ -71,7 +82,6 @@ object Microsoft {
                                 }
                             }
                         } else state = false
-
                     }
                 }
             }
@@ -94,7 +104,8 @@ object Microsoft {
             cli.acquireTokenSilently(sp).await()
         } catch (rethrow: Exception) {
             if (rethrow.cause is MsalException || account == null) {
-                val consume: (DeviceCode) -> Unit = { Static.out.println(it.userCode()); Static.out.println(it.verificationUri()); code = it }
+                val consume: (DeviceCode) -> Unit =
+                    { Static.out.println(it.userCode()); Static.out.println(it.verificationUri()); code = it }
                 val dfp = DeviceCodeFlowParameters.builder(Secret.SCOPE, consume).build()
 
                 cli.acquireToken(dfp).await()
