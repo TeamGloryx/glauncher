@@ -2,9 +2,9 @@ package net.gloryx.glauncher.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import cat.ui.dlg.getValue
+import cat.ui.dlg.setValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.SharedFlow

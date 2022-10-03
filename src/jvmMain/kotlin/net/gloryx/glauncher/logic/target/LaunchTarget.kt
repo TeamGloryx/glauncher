@@ -70,6 +70,8 @@ enum class LaunchTarget(
             args += "--accessToken ${Secret.accessToken}" // constant
             args += "--uuid ${getUUID(AuthState.ign)}"
 
+            // Assets
+            args += "--assetsDir ${Static.assetsDir}"
 
             args
         }

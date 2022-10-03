@@ -18,6 +18,7 @@ object Static {
     lateinit var scope: CoroutineScope
 
     const val doAuth = false
+    val assetsDir get() = root.resolve("assets").absolutePath
 
     val scopen get() = try_ { scope }
 

@@ -9,10 +9,6 @@ import net.fabricmc.installer.util.InstallerProgress
 import net.fabricmc.installer.util.MetaHandler
 import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.logic.target.LaunchTarget
-import net.gloryx.glauncher.util.Static
-import java.nio.file.Files
-import kotlin.io.path.Path
-import kotlin.io.path.relativeTo
 
 object Mods {
     interface Conf {

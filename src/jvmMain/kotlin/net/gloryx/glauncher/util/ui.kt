@@ -1,10 +1,14 @@
 package net.gloryx.glauncher.util
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import cat.f
 import cat.try_
@@ -31,8 +35,8 @@ fun ColumnScope.Spacer(height: Dp) = Spacer(Modifier.height(height))
 
 @Composable
 fun GButton(
-    click: () -> Unit = {}, modifier: Modifier = Modifier, icon: (@Composable () -> Unit)? = null,
-    colors: ButtonColors = ButtonDefaults.buttonColors(), enabled: Boolean = true,
+    click: () -> Unit = {}, icon: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.buttonColors(), enabled: Boolean = true, shape: Shape = RoundedCornerShape(30),
     content: @Composable RowScope.() -> Unit = {}
 ) {
     Button(click, enabled = enabled, colors = colors) {
@@ -43,23 +47,6 @@ fun GButton(
         content()
     }
 }
-
-@Composable
-fun <T : Any> Suspense(fn: suspend () -> T, fallback: Cfn, content: Cafn<T>) {
-    Suspense(sus(fn), fallback, content)
-}
-
-@Composable
-fun <T : Any> Suspense(state: MutableState<T?>, fallback: Cfn, content: Cafn<T>) {
-    if (state.value != null) println(state.value)
-    state.value?.let { content(it) } ?: fallback()
-}
-
-@Composable
-fun Suspend(fn: suspend CoroutineScope.() -> Unit): Job = rememberCoroutineScope().launch { fn() }
-
-@Composable
-fun <T> Async(fn: suspend CoroutineScope.() -> T): Deferred<T> = rememberCoroutineScope().async { fn() }
 
 @Composable
 fun <T : Any> sus(fn: suspend () -> T, recomposer: MutableState<out Any?> = mutableStateOf(null)): MutableState<T?> {
@@ -85,3 +72,6 @@ fun snackbar(
         then()
     }
 }
+
+@OptIn(ExperimentalUnitApi::class)
+fun TextUnit(value: Number, type: TextUnitType = TextUnitType.Sp) = androidx.compose.ui.unit.TextUnit(value.f, type)

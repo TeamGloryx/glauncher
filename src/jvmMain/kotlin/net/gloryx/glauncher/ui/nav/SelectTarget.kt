@@ -22,48 +22,49 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.ExperimentalUnitApi
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import net.gloryx.glauncher.logic.target.LaunchTarget
-import net.gloryx.glauncher.util.state.AuthState
+import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.state.MainScreen
 
-@OptIn(ExperimentalUnitApi::class)
-@Composable
-fun SelectTarget() {
-    val cardBorder = 4.dp
-    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        LaunchTarget.values().map {
-            val name = it.normalName
-            val isSelected by derivedStateOf { MainScreen.selected == it }
-            Card(
-                Modifier
-                    .clickable(!isSelected, "Launch $name!", Role.Button) {
-                        MainScreen.selected = it
+object SelectTarget : TargetState.Entry("Select") {
+    @Composable
+    override fun render() {
+        val cardBorder = 4.dp
+        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            LaunchTarget.values().map {
+                val name = it.normalName
+                val isSelected by derivedStateOf { MainScreen.selected == it }
+                Card(
+                    Modifier
+                        .clickable(!isSelected, "Launch $name!", Role.Button) {
+                            MainScreen.selected = it
+                        }
+                        .indication(
+                            remember { MutableInteractionSource() },
+                            rememberRipple(true, 30.dp, MaterialTheme.colors.primaryVariant)
+                        )
+                        .wrapContentSize(Alignment.CenterStart, true)
+                        .border(if (isSelected) 1.dp.unaryMinus() else cardBorder, MaterialTheme.colors.primaryVariant),
+                    RectangleShape,
+                    Color.Transparent,
+                    elevation = 10.dp
+                ) {
+                    Box(Modifier.padding(cardBorder)) {
+                        Image(it.painting, name, Modifier.zIndex(1f).size(200.dp), contentScale = ContentScale.Fit)
+                        Text(
+                            name,
+                            Modifier.zIndex(2f).align(Alignment.BottomStart).offset(10.dp),
+                            textAlign = TextAlign.Left,
+                            fontSize = TextUnit(2f, TextUnitType.Em)
+                        )
+                        if (isSelected)
+                            Box(Modifier.matchParentSize().zIndex(3f).paint(ColorPainter(Color.Green.copy(0.1f))))
                     }
-                    .indication(
-                        remember { MutableInteractionSource() },
-                        rememberRipple(true, 30.dp, MaterialTheme.colors.primaryVariant)
-                    )
-                    .wrapContentSize(Alignment.CenterStart, true)
-                    .border(if (isSelected) 1.dp.unaryMinus() else cardBorder, MaterialTheme.colors.primaryVariant),
-                RectangleShape,
-                Color.Transparent
-            ) {
-                Box(Modifier.padding(cardBorder)) {
-                    Image(it.painting, name, Modifier.zIndex(1f).size(200.dp), contentScale = ContentScale.Fit)
-                    Text(
-                        name,
-                        Modifier.zIndex(2f).align(Alignment.BottomStart).offset(10.dp),
-                        textAlign = TextAlign.Left,
-                        fontSize = TextUnit(2f, TextUnitType.Em)
-                    )
-                    if (isSelected)
-                        Box(Modifier.matchParentSize().zIndex(3f).paint(ColorPainter(Color.Green.copy(0.1f))))
                 }
+                Spacer(5.dp)
             }
         }
     }
