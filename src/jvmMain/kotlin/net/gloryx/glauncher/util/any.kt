@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package net.gloryx.glauncher.util
 
 import androidx.compose.runtime.Composable
@@ -23,7 +25,7 @@ suspend fun <T> SharedFlow<T>.plsCollect(collector: FlowCollector<T>) {
     }
 }
 
-fun color(x: Int) = Color(x.toLong() or 0x00000000FF000000)
+inline fun color(x: Int) = catfish.winder.colors.color(x)
 
 interface ComposableDelegator<H, V> {
     @Composable

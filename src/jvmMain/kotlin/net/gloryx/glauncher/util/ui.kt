@@ -6,6 +6,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnitType
@@ -75,3 +76,8 @@ fun snackbar(
 
 @OptIn(ExperimentalUnitApi::class)
 fun TextUnit(value: Number, type: TextUnitType = TextUnitType.Sp) = androidx.compose.ui.unit.TextUnit(value.f, type)
+
+fun Modifier.useHeightRef(state: MutableState<Dp>) = onSizeChanged { (_, height) -> state.value = height.dp }
+fun Modifier.useHeightRef(consumer: (Dp) -> Unit) = onSizeChanged { (_, height) -> consumer(height.dp) }
+fun Modifier.useWidthRef(state: MutableState<Dp>) = onSizeChanged { (width, _) -> state.value = width.dp }
+fun Modifier.useWidthRef(consumer: (Dp) -> Unit) = onSizeChanged { (width, _) -> consumer(width.dp) }

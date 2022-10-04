@@ -40,7 +40,7 @@ kotlin {
         val jvmMain by getting {
             val ktor = "2.1.1"
             dependencies {
-                implementation(kotlin("stdlib-jdk8"))
+                implementation(kotlin("stdlib"))
                 implementation(compose.desktop.currentOs)
                 implementation("net.hycrafthd:minecraft_authenticator:+")
                 implementation("org.spongepowered:configurate-core:4.1.2")

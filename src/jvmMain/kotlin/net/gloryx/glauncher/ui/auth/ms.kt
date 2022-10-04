@@ -21,7 +21,7 @@ import cat.async.await
 import cat.ui.Suspend
 import cat.ui.Suspense
 import cat.ui.dlg.*
-import catfish.winder.theme.colors.Color
+import catfish.winder.colors.Green200
 import com.microsoft.aad.msal4j.*
 import me.nullicorn.msmca.minecraft.MinecraftAuth
 import me.nullicorn.msmca.minecraft.MinecraftToken
@@ -70,7 +70,7 @@ object Microsoft {
                             }) { dc ->
                                 Column {
                                     SelectionContainer(
-                                        Modifier.align(Alignment.CenterHorizontally).border(3.dp, Color("green-200"))
+                                        Modifier.align(Alignment.CenterHorizontally).border(3.dp, Green200)
                                     ) {
                                         Text(dc.userCode(), textAlign = TextAlign.Center, fontSize = TextUnit(30))
                                     }

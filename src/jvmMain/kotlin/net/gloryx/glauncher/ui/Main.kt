@@ -1,12 +1,16 @@
 package net.gloryx.glauncher.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +36,7 @@ import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
 import net.gloryx.glauncher.util.state.SettingsState
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Preview
 fun Main() {
@@ -102,12 +107,19 @@ fun Main() {
                 }, shape = RoundedCornerShape(10)) {
                     Text("Play!")
                 }
-            }) { pad ->
+            }) { padding ->
                 AuthDialog()
-                Column(Modifier.padding(pad)) {
-                    TargetState.selected.render()
-                    ConsoleComponent()
+                LazyRow(Modifier, MainScreen.lazyRow, padding, userScrollEnabled = true) {
+                    items(TargetState.entries, TargetState.Entry::name) {
+                        it.renderWrapping(Modifier.animateItemPlacement().fillParentMaxSize(), padding)
+                    }
                 }
+                LaunchedEffect(TargetState.selected) {
+                    val index = TargetState.entries.indexOf(TargetState.selected)
+                    if (MainScreen.lazyRow.firstVisibleItemIndex != index)
+                        MainScreen.lazyRow.scrollToItem(index)
+                }
+                ConsoleComponent()
             }
         }
     }
