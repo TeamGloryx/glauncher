@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Checkbox
 import androidx.compose.material.Slider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +36,6 @@ object SettingsState {
                 val (state, setState) = useState(0f)
                 val range = 1024..Static.physicalMemory
                 Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceEvenly) {
-
                     Column(Modifier.align(Alignment.Top)) {
                         Slider(
                             state, {
@@ -50,7 +50,18 @@ object SettingsState {
                         }
                         Text("${currRAM}MB", Modifier.align(Alignment.CenterHorizontally))
                     }
-
+                }
+            }
+            setting("Enable old SMP version (1.16.5)?", oldSMP) {
+                Column {
+                    Text("[Recommended on 32-bit Java]")
+                    Row(Modifier.align(Alignment.Start)) {
+                        Checkbox(oldSMP.component1(), oldSMP.component2())
+                        Text(
+                            "1.16.5 SMP is ${if (it) "Enabled" else "Disabled"}",
+                            Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
                 }
             }
         }
