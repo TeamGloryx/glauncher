@@ -6,6 +6,13 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.compose")
     kotlin("plugin.serialization") version "1.7.10"
+    idea
+}
+
+idea {
+    module {
+        isDownloadSources = true
+    }
 }
 
 group = "net.gloryx"
@@ -19,13 +26,13 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven("https://dev.gloryx.net/main")
     maven("https://dev.gloryx.net/snap")
-    mavenLocal()
     maven("https://repo.u-team.info")
     maven("https://maven.fabricmc.net")
 }
+val cat = "0.2.0-SNAPSHOT"
 dependencies {
-    implementation("net.gloryx.cat:ui:+")
-    implementation(kotlin("stdlib"))
+    implementation("net.gloryx.cat:ui:$cat")
+    implementation(kotlin("stdlib", "1.7.10"))
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 }
 
@@ -40,13 +47,13 @@ kotlin {
         val jvmMain by getting {
             val ktor = "2.1.1"
             dependencies {
-                implementation(kotlin("stdlib"))
+                implementation(kotlin("stdlib", "1.7.10"))
                 implementation(compose.desktop.currentOs)
                 implementation("net.hycrafthd:minecraft_authenticator:+")
                 implementation("org.spongepowered:configurate-core:4.1.2")
                 implementation("commons-codec:commons-codec:1.15")
                 implementation("org.spongepowered:configurate-hocon:4.1.2")
-                implementation("net.gloryx:cat:0.1.52-SNAPSHOT")
+                implementation("net.gloryx:cat:$cat")
                 implementation("net.gloryx:oknamer:0.1.02-SNAPSHOT")
                 implementation("com.electronwill.night-config:core:3.6.6")
                 implementation("com.electronwill.night-config:hocon:3.6.6")
@@ -64,7 +71,7 @@ kotlin {
                 implementation("org.jetbrains.compose.ui:ui-graphics-desktop:$composeVersion")
                 implementation("org.jetbrains.compose.ui:ui-geometry-desktop:$composeVersion")
                 implementation("org.jetbrains.compose.foundation:foundation-desktop:$composeVersion")
-                implementation("net.gloryx.cat:ui-jvm:+")
+                implementation("net.gloryx.cat:ui-jvm:$cat")
             }
         }
         val jvmTest by getting

@@ -51,7 +51,9 @@ class SettingsDSL {
                     val (ch, sch) = useState(0.dp)
                     Box(
                         Modifier
-                            .width(3.dp).height(ch - 4.dp)
+                            .width(3.dp)
+                            .height(ch - 4.dp)
+                            .offset(y = 4.dp)
                             .align(Alignment.CenterVertically)
                             .graphicsLayer(alpha = 1f)
                             .background(MaterialTheme.colors.secondary)

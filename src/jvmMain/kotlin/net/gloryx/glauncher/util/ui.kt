@@ -40,7 +40,7 @@ fun GButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(), enabled: Boolean = true, shape: Shape = RoundedCornerShape(30),
     content: @Composable RowScope.() -> Unit = {}
 ) {
-    Button(click, enabled = enabled, colors = colors) {
+    Button(click, enabled = enabled, colors = colors, shape = shape, modifier = modifier) {
         icon?.let {
             it()
             Spacer(2.dp)
