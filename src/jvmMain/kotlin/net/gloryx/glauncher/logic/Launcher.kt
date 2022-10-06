@@ -4,7 +4,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.gloryx.glauncher.logic.target.Assets
 import net.gloryx.glauncher.logic.target.LaunchTarget
+import net.gloryx.glauncher.util.Static
+import net.gloryx.glauncher.util.snackbar
 import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
 import org.jetbrains.skiko.hostOs
@@ -13,17 +16,18 @@ object Launcher {
     suspend fun launch(target: LaunchTarget) {
         println("Launching $target")
         if (!AuthState.isAuthenticated) {
-            MainScreen.scaffold?.snackbarHostState?.showSnackbar("You are not authenticated!", "Authenticate")
+            snackbar("You are not authenticated!", "Authenticate")
             AuthState.authDialog = true
             return
         }
-        //Assets.prepare(target)
+        if (!target.dir.exists() || target.dir.list().isNullOrEmpty()) target.install()
+
+        Assets.prepare(target)
         target.run()
 
         println(target.mcArgs)
 
-        //! DO LAST, IT SUSPENDS UNTIL THE SNACKBAR IS DISMISSED!!!
-        MainScreen.scaffold?.snackbarHostState?.showSnackbar("Launching ${target.normalName}...", "Dismiss")
+        snackbar("Launching ${target.normalName}...", "Dismiss")
     }
 
     fun play(target: LaunchTarget) {
@@ -34,8 +38,20 @@ object Launcher {
 
     suspend fun start(target: LaunchTarget) {
         val dir = target.dir.absolutePath
-        val args = mutableListOf("java")
+        val args = mutableListOf(Static.java)
+
+        if (System.getProperty("os.name")
+                .let { it.startsWith("Windows") && it.endsWith("10") }
+        ) args += listOf("-Dos.name=Windows 10", "-Dos.version=10.0")
+        if (hostOs.isMacOS) args += "-XstartOnFirstThread"
+        if (Static.is32Bit) args += "-Xss1M"
+
         args += "-Djava.library.path=\"${target.natives}\""
+
+        args += listOf(
+            "-Dminecraft.launcher.brand=gloryx",
+            "-Dminecraft.launcher.version=${Static.version}",
+        )
 
         args += "-cp"
         val cp = target.classpath
@@ -47,6 +63,7 @@ object Launcher {
         args += target.main
 
         args += target.mcArgs
+
 
         val proc = ProcessBuilder().command(args).inheritIO()
 

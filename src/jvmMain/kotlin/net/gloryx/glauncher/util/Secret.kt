@@ -1,5 +1,6 @@
 package net.gloryx.glauncher.util
 
+import net.gloryx.glauncher.util.state.AuthState
 import net.hycrafthd.minecraft_authenticator.Constants
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader
 import java.net.URLEncoder
@@ -15,4 +16,6 @@ object Secret {
     val SCOPE = setOf("XboxLive.signin offline_access")
 
     const val accessToken = "gloryx_net"
+
+    val token = if (AuthState.premium) AuthState.accessToken!! else accessToken
 }

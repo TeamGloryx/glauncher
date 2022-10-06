@@ -1,11 +1,17 @@
 package net.gloryx.glauncher.logic.target
 
+import cat.reflect.cast
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigValueFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloader
+import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.util.Static
-import org.apache.commons.codec.digest.DigestUtils
+import net.gloryx.glauncher.util.conf
+import net.gloryx.glauncher.util.fetch
+import net.gloryx.glauncher.util.json
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -17,29 +23,41 @@ import java.util.zip.ZipInputStream
 
 object Assets {
     val dir get() = Static.root.resolve(".strangeness").apply { mkdirs() }
+    val assets = Static.root.resolve(".assets").apply { mkdirs(); resolve("indexes").mkdirs(); resolve("objects").mkdirs() }
+
+    suspend fun assetIndex(target: LaunchTarget): Config {
+        val indexURL = target.versionManifest().conf.getConfig("assetIndex").getString("url")
+        return fetch(indexURL).json().conf.withValue(
+            "assetIndex",
+            indexURL.split('/').last().let(ConfigValueFactory::fromAnyRef)
+        ).withValue("assetIndexURL", indexURL.let(ConfigValueFactory::fromAnyRef))
+    }
+
     suspend fun prepare(target: LaunchTarget) {
         val name = target.name.lowercase()
         val td = dir.resolve("./$name")
-        /*
-        if (td.exists() && td.listFiles()?.isNotEmpty() == true) {
-            val hash =
-                DigestUtils.md5Hex(td.listFiles()!!.asList().run {
-                    subList(0, size.coerceAtLeast(0)).filter { !it.isDirectory && it.length() <= 5e+8 }
-                        .map { DigestUtils.md5Hex(it.readText()) }
-                }.ifEmpty { listOf(DigestUtils.md5Hex("1212jawiec12h3c1h2ionch31hnc2hncy1cn30123897123712")) }
-                    .reduce { acc, it -> DigestUtils.sha1Hex("$acc$it") })
-            val curHash = td.resolve("./hsh128").takeIf { it.exists() }?.readText()
-            if (hash != curHash)
-                dload(name)
-            return
+
+        val a = assetIndex(target)
+        assets.resolve("indexes/${a.getString("assetIndex")}").also(File::createNewFile).writeText(fetch(a.getString("assetIndexURL")).json())
+        val ai = a.getConfig("objects")!!.root().toMap()
+
+        downloading {
+            ai.mapValues { (_, b) -> b.unwrapped().cast<Map<String, Any>>()["hash"]!!.cast<String>() }
+                .onEach { (_, b) ->
+                    val f2 = b.take(2)
+                    assets.resolve("objects/$f2").mkdirs()
+                    download(
+                        DownloadJob(
+                            URL("http://resources.download.minecraft.net/$f2/$b"),
+                            assets.resolve("objects/$f2/$b").also(File::createNewFile)
+                        )
+                    )
+                }
         }
-        dload(name)
-         */
     }
 
-    suspend fun dload(name: String) {
-        val dest = "./${dir.toRelativeString(Static.root)}/$name.zip"
-        val url = URL("https://launch.gloryx.net/assets/$name.zip")
+    suspend fun unzip(url: String, dest: String) {
+        val url = URL(url)
         Downloader.download(DownloadJob(url, dest))
 
         withContext(Dispatchers.IO) {

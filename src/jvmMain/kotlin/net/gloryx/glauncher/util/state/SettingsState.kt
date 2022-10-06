@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Slider
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.*
@@ -19,6 +16,7 @@ import cat.ui.dlg.State
 import cat.ui.dlg.useState
 import cat.ui.text.*
 import catfish.winder.colors.*
+import net.gloryx.glauncher.util.GSlider
 import net.gloryx.glauncher.util.Spacer
 import net.gloryx.glauncher.util.Static
 import kotlin.math.roundToInt
@@ -36,7 +34,7 @@ object SettingsState {
                 val valueRange = 1f..range.last.f.div(512f)
                 Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceEvenly) {
                     Column(Modifier.align(Alignment.Top)) {
-                        Slider(
+                        GSlider(
                             state, {
                                 setState(it.coerceIn(valueRange))
                                 ram.value = (it.roundToInt() * 512).coerceIn(range)
@@ -47,11 +45,11 @@ object SettingsState {
                             Spacer(1)
                             Text("${range.last}MB")
                         }
-                        BasicTextField("$currRAM", {
+                        TextField("$currRAM", {
                             val i = it.toInt()
                             ram.value = i
                             setState(i / 512f)
-                        }, Modifier.align(Alignment.CenterHorizontally))
+                        }, Modifier.align(Alignment.CenterHorizontally), textStyle = LocalTextStyle.current.copy(MaterialTheme.colors.onBackground), isError = currRAM !in range)
                         Text("MB", Modifier.align(Alignment.CenterHorizontally))
                     }
                 }

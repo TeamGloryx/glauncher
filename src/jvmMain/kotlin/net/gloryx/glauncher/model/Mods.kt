@@ -1,5 +1,7 @@
 package net.gloryx.glauncher.model
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -17,29 +19,24 @@ object Mods {
 
     @Serializable
     data class Fabric(val version: String, val loaderVersion: String = "0.14.9") : Conf {
+        @kotlinx.serialization.Transient var versionData = ConfigFactory.empty()
         val fabricLoader inline get() = "fabric-loader-$loaderVersion-$version"
         override suspend fun install(target: LaunchTarget) {
+            versionData = ConfigFactory.parseString(target.versionManifest())
+
             println("Fabric running with $version and $loaderVersion")
             val fn = target.dir.resolve("versions").listFiles()!!.first().let { it.resolve("${it.name}.jar") }
-            if (fn.let { it.exists() && it.length() != 0L }) return println("Fabric is already installed.")
             fn.delete()
-            ClientInstaller.install(
-                target.dir.toPath(), version, LoaderVersion(
-                    MetaHandler("v2/versions/loader").also(MetaHandler::load).getLatestVersion(false).version
-                ), InstallerProgress.CONSOLE
-            )
-            fn.delete()
-            downloading {
-                val fl =
-                    library("https://maven.fabricmc.net/net/fabricmc/fabric-loader/$loaderVersion/$fabricLoader.jar").also {
-                        it.renameTo(
-                            it.resolveSibling("fabric-loader-$loaderVersion-$version.jar")
-                        )
-                    }
-                withContext(Dispatchers.IO) {
-                    fl.copyTo(fn, true)
-                }
+            withContext(Dispatchers.IO) {
+                ClientInstaller.install(
+                    target.dir.toPath(), version, LoaderVersion(
+                        MetaHandler("v2/versions/loader").also(MetaHandler::load).getLatestVersion(false).version
+                    ), InstallerProgress.CONSOLE
+                )
+                fn.delete()
             }
+
+            versionData
         }
 
         @Serializable

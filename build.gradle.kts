@@ -72,6 +72,7 @@ kotlin {
                 implementation("org.jetbrains.compose.ui:ui-geometry-desktop:$composeVersion")
                 implementation("org.jetbrains.compose.foundation:foundation-desktop:$composeVersion")
                 implementation("net.gloryx.cat:ui-jvm:$cat")
+                implementation("org.python:jython:+")
             }
         }
         val jvmTest by getting

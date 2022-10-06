@@ -7,6 +7,8 @@ import cat.i
 import cat.try_
 import com.sun.management.OperatingSystemMXBean
 import kotlinx.coroutines.CoroutineScope
+import org.jetbrains.skiko.OS
+import org.jetbrains.skiko.hostOs
 import java.io.File
 import java.io.PrintStream
 import java.lang.management.ManagementFactory
@@ -17,6 +19,7 @@ object Static {
     val is32Bit = osArch.contains("86")
     val out: PrintStream = System.out
     val root get() = File(System.getProperty("user.dir"))
+    val jresDir get() = root.resolve(".jre").also(File::mkdirs)
     var window: ComposeWindow? = null
     lateinit var scope: CoroutineScope
 
@@ -31,4 +34,6 @@ object Static {
     val scopen get() = try_ { scope }
 
     val colors = darkColors(color(0x00ffaf), secondary = color(0x08afd), surface = Color.DarkGray)
+
+    const val version = "0.8"
 }

@@ -15,6 +15,7 @@ object Downloader {
 
     private val _downloads = MutableSharedFlow<DownloadJob>()
     val downloads = _downloads.asSharedFlow()
+    @PublishedApi
     internal val helper = Downloading()
 
     fun init() {
@@ -25,16 +26,9 @@ object Downloader {
     private suspend inline fun register() {
         downloads.plsCollect { job ->
             job.tryAwait()?.let {
-                if (job.destination.exists()) return@plsCollect println(
-                    "[Download] \"./${
-                        job.destination.toRelativeString(
-                            Static.root
-                        )
-                    }\" already exists, skipping."
-                )
-
+                if (job.destination.length() != 0L) return@plsCollect println("WARN [Downloader] ./${job.destination.toRelativeString(Static.root)} already exists")
                 println("[Download] Url: \"${job.url}\"; Dst: \"./${job.destination.toRelativeString(Static.root)}\"")
-                it.body?.let { body ->
+                it.body?.use { body ->
                     if (body.contentType()?.type?.startsWith("text") == true) job.destination.writeText(
                         body.string(), body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
                     )
@@ -47,7 +41,7 @@ object Downloader {
     suspend fun download(job: DownloadJob) = _downloads.emit(job).also { job.maybe?.body?.close() }
 }
 
-suspend fun downloading(scope: suspend Downloading.() -> Unit) = scope(Downloader.helper)
+suspend inline fun downloading(scope: Downloading.() -> Unit) = scope(Downloader.helper)
 
 class Downloading internal constructor() {
     val loader = Downloader

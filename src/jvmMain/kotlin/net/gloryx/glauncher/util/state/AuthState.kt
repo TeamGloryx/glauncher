@@ -21,9 +21,13 @@ import java.util.*
 object AuthState {
     var authDialog by State(false)
 
-    var ign by State<String?>(null)
+    var ign by MaybeState<String>()
 
-    var hash by State<String?>(null)
+    var hash by MaybeState<String>()
+
+    var premium by State(false)
+
+    var accessToken by MaybeState<String>()
 
     val isAuthenticated by derivedStateOf { ign != null }
 
