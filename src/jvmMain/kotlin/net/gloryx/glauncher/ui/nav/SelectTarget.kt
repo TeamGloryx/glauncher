@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -25,29 +28,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import cat.map
+import cat.ui.dlg.forget
+import catfish.winder.colors.Green300
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.state.MainScreen
 
 object SelectTarget : TargetState.Entry("Select") {
     @Composable
-    override fun render() {
+    override fun render(padding: PaddingValues?) {
         val cardBorder = 4.dp
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            LaunchTarget.values().map {
+        LazyVerticalGrid(GridCells.Fixed(3), padding?.let(Modifier.Companion::padding) ?: Modifier) {
+            items(LaunchTarget.values(), LaunchTarget::ordinal) {
                 val name = it.normalName
-                val isSelected by derivedStateOf { MainScreen.selected == it }
+                val isSelected by forget { derivedStateOf { MainScreen.selected == it } }
                 Card(
                     Modifier
                         .clickable(!isSelected, "Launch $name!", Role.Button) {
                             MainScreen.selected = it
                         }
                         .indication(
-                            remember { MutableInteractionSource() },
+                            forget { MutableInteractionSource() },
                             rememberRipple(true, 30.dp, MaterialTheme.colors.primaryVariant)
                         )
                         .wrapContentSize(Alignment.CenterStart, true)
-                        .border(if (isSelected) 1.dp.unaryMinus() else cardBorder, MaterialTheme.colors.primaryVariant),
+                        .border(cardBorder, isSelected.map(Green300, MaterialTheme.colors.primaryVariant)),
                     RectangleShape,
                     Color.Transparent,
                     elevation = 10.dp
@@ -64,7 +70,6 @@ object SelectTarget : TargetState.Entry("Select") {
                             Box(Modifier.matchParentSize().zIndex(3f).paint(ColorPainter(Color.Green.copy(0.1f))))
                     }
                 }
-                Spacer(5.dp)
             }
         }
     }

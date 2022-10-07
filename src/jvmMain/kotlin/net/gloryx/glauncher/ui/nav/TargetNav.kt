@@ -21,17 +21,17 @@ import net.gloryx.glauncher.ui.settings.Settings
 import net.gloryx.glauncher.util.GButton
 
 object TargetState {
-    val entries = listOf(SelectTarget, Settings)
+    val entries = listOf(SelectTarget, Settings, Actions)
     var selected by State<Entry>(SelectTarget)
 
     abstract class Entry(val name: String) {
         @Composable
-        abstract fun render()
+        abstract fun render(padding: PaddingValues?)
 
         open val icon: ComposableFn? = null
 
         @Composable
-        open fun renderWrapping(modifier: Modifier = Modifier, contentPadding: PaddingValues? = null) = Box(modifier.then(contentPadding?.let(Modifier::padding) ?: Modifier)) { render() }
+        open fun renderWrapping(modifier: Modifier = Modifier, contentPadding: PaddingValues? = null) = Box(modifier) { render(contentPadding) }
 
         @Composable
         open fun button() = GButton({

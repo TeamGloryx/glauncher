@@ -7,6 +7,7 @@ import cat.i
 import cat.try_
 import com.sun.management.OperatingSystemMXBean
 import kotlinx.coroutines.CoroutineScope
+import net.gloryx.glauncher.logic.jre.Jre.inlineThrow
 import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.hostOs
 import java.io.File
@@ -19,7 +20,7 @@ object Static {
     val is32Bit = osArch.contains("86")
     val out: PrintStream = System.out
     val root get() = File(System.getProperty("user.dir"))
-    val jresDir get() = root.resolve(".jre").also(File::mkdirs)
+    val jresDir = root.resolve(".jre").also(File::mkdirs)
     var window: ComposeWindow? = null
     lateinit var scope: CoroutineScope
 
@@ -30,6 +31,13 @@ object Static {
         val os = ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
         os.totalMemorySize / 1e6
     }.also(out::println).i.also(out::println)
+
+    val osName = when (hostOs) {
+        OS.Linux -> "linux"
+        OS.MacOS -> "osx"
+        OS.Windows -> "windows"
+        else -> inlineThrow()
+    }
 
     val scopen get() = try_ { scope }
 

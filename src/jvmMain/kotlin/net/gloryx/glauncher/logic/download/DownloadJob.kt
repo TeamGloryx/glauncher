@@ -25,7 +25,7 @@ data class DownloadJob(val url: URL, val destination: File = Static.root.resolve
     fun req(scope: Request.Builder.() -> Unit = {}) = req(request.apply(scope).build())
     fun req(request: Request) { this.request = request.newBuilder() }
 
-    constructor(url: URL, destination: String) : this(url, File(destination).relativeTo(Static.root))
+    constructor(url: URL, destination: String) : this(url, Static.root.resolve(destination))
 
     override suspend fun await(): Response = Downloader.client.newCall(request.build()).await()
 

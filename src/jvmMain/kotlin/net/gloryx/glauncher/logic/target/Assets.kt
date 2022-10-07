@@ -56,14 +56,16 @@ object Assets {
         }
     }
 
-    suspend fun unzip(url: String, dest: String) {
+    suspend fun unzip(url: String, dst: String): File {
+        val dest = "$dst.zip"
         val url = URL(url)
         Downloader.download(DownloadJob(url, dest))
 
         withContext(Dispatchers.IO) {
-            val file = File(dest)
+            val zf = Static.root.resolve(dest)
+            val file = Static.root.resolve(dst)
             val buf = byteArrayOf()
-            val zip = ZipInputStream(FileInputStream(file))
+            val zip = ZipInputStream(FileInputStream(zf))
             var entry = zip.nextEntry
             while (entry != null) {
                 val newFile: File = newFile(file, entry)
@@ -91,7 +93,10 @@ object Assets {
             zip.closeEntry()
             zip.close()
         }
+        return Static.root.resolve(dst)
     }
+
+
 
     @Throws(IOException::class)
     fun newFile(destinationDir: File, zipEntry: ZipEntry): File {

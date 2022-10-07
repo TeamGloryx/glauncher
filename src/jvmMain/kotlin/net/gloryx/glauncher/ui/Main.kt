@@ -91,7 +91,7 @@ fun Main() {
                             Text("Console")
                         }
                         GButton({
-
+                            TargetState.selected = Settings
                         }, {
                             Icon(Icons.Rounded.Settings, "Settings")
                         }) {
@@ -109,9 +109,9 @@ fun Main() {
                 }
             }) { padding ->
                 AuthDialog()
-                LazyRow(Modifier, MainScreen.lazyRow, padding, userScrollEnabled = true) {
+                LazyRow(Modifier, MainScreen.lazyRow, padding, userScrollEnabled = false) {
                     items(TargetState.entries, TargetState.Entry::name) {
-                        it.renderWrapping(Modifier.animateItemPlacement().fillParentMaxSize(), padding)
+                        it.renderWrapping(Modifier.animateItemPlacement().fillParentMaxSize(), null)
                     }
                 }
                 LaunchedEffect(TargetState.selected) {

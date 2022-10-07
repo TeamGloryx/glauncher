@@ -7,29 +7,45 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.zIndex
+import cat.try_
+import cat.ui.dlg.*
 import net.gloryx.glauncher.util.Static
+import org.apache.logging.log4j.util.StackLocatorUtil
+import org.slf4j.event.Level
 
 object Console {
-    val textState = mutableStateOf(
-        "Gloryx Launcher by nothen@gloryx\n"
+    val textState = State(
+        "Gloryx Launcher by nothen@gloryx"
     )
     var text by textState
 
 
-    val dialog = mutableStateOf(false)
+    val dialog = State(false)
+
+    fun send(message: Any) {
+        text += "\n$message"
+    }
+
+    fun log(message: Any, level: Level = Level.INFO) =
+        if (level != Level.TRACE)
+            send("$level [${try_ { StackLocatorUtil.getCallerClass(3) }?.simpleName ?: "STDOUT"}/] $message")
+        else send("$level [${try_ { StackLocatorUtil.getCallerClass(3) }?.simpleName ?: "STDOUT"}/] $message\n${Exception().stackTrace.joinToString { "\tat $it" }}")
+
+    fun info(message: Any) = log(message)
+    fun warn(message: Any) = log(message, Level.WARN)
+    fun error(message: Any) = log(message, Level.ERROR)
+    fun debug(message: Any) = log(message, Level.DEBUG)
+
+    fun trace(message: Any) = log(message, Level.TRACE)
 }
 
 @Composable

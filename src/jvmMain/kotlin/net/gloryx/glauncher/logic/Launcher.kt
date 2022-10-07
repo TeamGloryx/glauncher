@@ -4,9 +4,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.gloryx.glauncher.logic.jre.Jre
 import net.gloryx.glauncher.logic.target.Assets
 import net.gloryx.glauncher.logic.target.LaunchTarget
+import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.Static
+import net.gloryx.glauncher.util.rs
 import net.gloryx.glauncher.util.snackbar
 import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
@@ -14,7 +17,7 @@ import org.jetbrains.skiko.hostOs
 
 object Launcher {
     suspend fun launch(target: LaunchTarget) {
-        println("Launching $target")
+        Console.info("Launching $target")
         if (!AuthState.isAuthenticated) {
             snackbar("You are not authenticated!", "Authenticate")
             AuthState.authDialog = true
@@ -25,7 +28,7 @@ object Launcher {
         Assets.prepare(target)
         target.run()
 
-        println(target.mcArgs)
+        Console.info(target.mcArgs)
 
         snackbar("Launching ${target.normalName}...", "Dismiss")
     }
@@ -38,7 +41,7 @@ object Launcher {
 
     suspend fun start(target: LaunchTarget) {
         val dir = target.dir.absolutePath
-        val args = mutableListOf(Static.java)
+        val args = mutableListOf(Jre.j(target).rs)
 
         if (System.getProperty("os.name")
                 .let { it.startsWith("Windows") && it.endsWith("10") }

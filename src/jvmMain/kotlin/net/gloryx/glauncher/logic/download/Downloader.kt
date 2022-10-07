@@ -8,6 +8,7 @@ import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.plsCollect
 import okhttp3.Dns
 import okhttp3.OkHttpClient
+import java.io.File
 import java.net.URL
 
 object Downloader {
@@ -15,6 +16,7 @@ object Downloader {
 
     private val _downloads = MutableSharedFlow<DownloadJob>()
     val downloads = _downloads.asSharedFlow()
+
     @PublishedApi
     internal val helper = Downloading()
 
@@ -26,7 +28,13 @@ object Downloader {
     private suspend inline fun register() {
         downloads.plsCollect { job ->
             job.tryAwait()?.let {
-                if (job.destination.length() != 0L) return@plsCollect println("WARN [Downloader] ./${job.destination.toRelativeString(Static.root)} already exists")
+                if (job.destination.length() != 0L) return@plsCollect println(
+                    "WARN [Downloader] ./${
+                        job.destination.toRelativeString(
+                            Static.root
+                        )
+                    } already exists"
+                )
                 println("[Download] Url: \"${job.url}\"; Dst: \"./${job.destination.toRelativeString(Static.root)}\"")
                 it.body?.use { body ->
                     if (body.contentType()?.type?.startsWith("text") == true) job.destination.writeText(
@@ -49,5 +57,8 @@ class Downloading internal constructor() {
     suspend fun download(job: DownloadJob) = loader.download(job).let { job.file }
     suspend fun download(url: String, destination: String) = download(DownloadJob(destination, URL(url)))
 
-    suspend fun library(url: String) = download(url, "./libraries")
+    suspend fun library(url: String, artifact: String? = null) =
+        download(DownloadJob(URL(url), File("./libraries${if (artifact != null) "/${artifact.split(":", ".").toMutableList().let { 
+            it + (it.takeLast(2).joinToString("-"))
+        }.joinToString("/")}.jar" else ""}")))
 }

@@ -116,3 +116,5 @@ fun GSlider(
 val String.conf: Config get() = let(ConfigFactory::parseString)
 
 val File.rs get() = toRelativeString(Static.root)
+
+fun CoroutineScope.yeet(block: suspend CoroutineScope.() -> Unit) = launch(block = block)

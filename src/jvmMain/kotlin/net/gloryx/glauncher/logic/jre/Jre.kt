@@ -1,14 +1,13 @@
 package net.gloryx.glauncher.logic.jre
 
-import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.logic.target.Assets
 import net.gloryx.glauncher.logic.target.LaunchTarget
+import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.rs
 import org.jetbrains.skiko.OS
 import org.jetbrains.skiko.hostOs
-import java.net.URL
 
 object Jre {
     inline val dir get() = Static.jresDir
@@ -30,7 +29,7 @@ object Jre {
     fun j(target: LaunchTarget) = dir.resolve(when (target.javaVersion) {
         "8" -> "eight"
         "17" -> "seventeen"
-        else -> fuckyou()
+        else -> inlineThrow()
     })
 
     suspend fun download(target: LaunchTarget) = downloading {
@@ -39,12 +38,16 @@ object Jre {
             OS.Windows -> if (Static.is32Bit) windows32[j] else windows64[j]
             OS.Linux -> linux[j]
             else -> windows64[j]
-        } ?: fuckyou()
+        } ?: inlineThrow()
 
         val dest = j(target)
 
-        Assets.unzip(dl, dest.rs)
+        if (dest.exists() && dest.isDirectory && !dest.listFiles().isNullOrEmpty()) return Console.warn("Java $j already exists.")
+
+        val uz = Assets.unzip(dl, dest.rs)
+        uz.listFiles()!![0].listFiles()!!.filter { it.isDirectory }.forEach { it.copyTo(uz) }
     }
 
-    inline fun fuckyou(): Nothing = throw IllegalArgumentException("It is not possible, you modded the launcher and you should get the fuck out of here.")
+    @Suppress("nothing_to_inline") // inline throw
+    inline fun inlineThrow(): Nothing = throw IllegalArgumentException("It is not possible, you modded the launcher and you should get the fuck out of here.")
 }

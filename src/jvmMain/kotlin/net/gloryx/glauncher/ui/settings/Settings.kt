@@ -1,5 +1,6 @@
 package net.gloryx.glauncher.ui.settings
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -14,7 +15,7 @@ private val state = SettingsState
 
 object Settings : TargetState.Entry("Settings") {
     @Composable
-    override fun render() {
+    override fun render(padding: PaddingValues?) {
         state.settings.render()
     }
 
