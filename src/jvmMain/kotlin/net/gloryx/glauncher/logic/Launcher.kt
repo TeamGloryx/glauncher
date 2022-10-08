@@ -1,31 +1,28 @@
 package net.gloryx.glauncher.logic
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import cat.async.await
+import kotlinx.coroutines.*
 import net.gloryx.glauncher.logic.jre.Jre
-import net.gloryx.glauncher.logic.target.Assets
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.rs
 import net.gloryx.glauncher.util.snackbar
 import net.gloryx.glauncher.util.state.AuthState
-import net.gloryx.glauncher.util.state.MainScreen
 import org.jetbrains.skiko.hostOs
 
 object Launcher {
     suspend fun launch(target: LaunchTarget) {
         Console.info("Launching $target")
         if (!AuthState.isAuthenticated) {
-            snackbar("You are not authenticated!", "Authenticate")
-            AuthState.authDialog = true
+            snackbar("You are not authenticated!", "Authenticate") {
+                AuthState.authDialog = true
+            }
             return
         }
         if (!target.dir.exists() || target.dir.list().isNullOrEmpty()) target.install()
 
-        Assets.prepare(target)
+        //Assets.prepare(target)
         target.run()
 
         Console.info(target.mcArgs)
@@ -33,15 +30,17 @@ object Launcher {
         snackbar("Launching ${target.normalName}...", "Dismiss")
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun play(target: LaunchTarget) {
         GlobalScope.launch {
             launch(target)
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun start(target: LaunchTarget) {
         val dir = target.dir.absolutePath
-        val args = mutableListOf(Jre.j(target).rs)
+        val args = mutableListOf(Jre.javaExecOf(target).rs)
 
         if (System.getProperty("os.name")
                 .let { it.startsWith("Windows") && it.endsWith("10") }
@@ -70,10 +69,15 @@ object Launcher {
 
         val proc = ProcessBuilder().command(args).inheritIO()
 
-        println(args)
+        Console.debug(args)
 
         withContext(Dispatchers.IO) {
-            proc.start()
+            Static.process = proc.start().also {
+                GlobalScope.launch {
+                    it.onExit().await()
+                    Static.process = null
+                }
+            }
         }
     }
 }

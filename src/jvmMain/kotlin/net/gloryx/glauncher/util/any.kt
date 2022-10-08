@@ -63,6 +63,10 @@ fun String.camelToSnake(): String {
 
 val coro get() = Static.scope
 
+/**
+ * Waits for [expr] return value to become true, else delay for [step]ms
+ * **BEWARE** [expr] is executed every [step]ms (e.g. very frequently)
+ */
 suspend fun waitFor(step: Long = 500, expr: () -> Boolean) { while (!expr()) delay(step) }
 
 operator fun File.getValue(that: Any?, prop: KProperty<*>) = readText()
@@ -78,3 +82,6 @@ class VarOutputStream(state: MutableState<String>) : OutputStream() {
         
     }
 }
+
+fun File.isEmpty() = (if (isDirectory) length() == 0L || listFiles().isNullOrEmpty() else length() == 0L) || !exists()
+fun File.isNotEmpty() = !isEmpty()

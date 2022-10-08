@@ -5,7 +5,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.0.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("plugin.serialization")
     idea
 }
 
@@ -19,6 +19,7 @@ group = "net.gloryx"
 version = "1.0.0"
 
 val composeVersion = extra["compose.version"] as String
+val kotlinVersion = extra["kotlin.version"] as String
 
 repositories {
     google()
@@ -32,8 +33,8 @@ repositories {
 val cat = "0.2.0-SNAPSHOT"
 dependencies {
     implementation("net.gloryx.cat:ui:$cat")
-    implementation(kotlin("stdlib", "1.7.10"))
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 
 kotlin {
@@ -44,10 +45,15 @@ kotlin {
         withJava()
     }
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib", kotlinVersion))
+            }
+        }
         val jvmMain by getting {
             val ktor = "2.1.1"
             dependencies {
-                implementation(kotlin("stdlib", "1.7.10"))
+                implementation(kotlin("stdlib-jdk8", kotlinVersion))
                 implementation(compose.desktop.currentOs)
                 implementation("net.hycrafthd:minecraft_authenticator:+")
                 implementation("org.spongepowered:configurate-core:4.1.2")
@@ -75,6 +81,8 @@ kotlin {
                 implementation("org.python:jython:+")
                 implementation("org.apache.logging.log4j:log4j-core:2.19.0")
                 implementation("org.apache.logging.log4j:log4j-api:2.19.0")
+                implementation("net.lingala.zip4j:zip4j:2.11.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
             }
         }
         val jvmTest by getting
@@ -88,6 +96,17 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "glauncher"
             packageVersion = rootProject.version.toString()
+
+            linux {
+                shortcut = true
+                appCategory = "Games"
+            }
+            windows {
+                perUserInstall = true
+                dirChooser = true
+                menu = true
+                menuGroup = "Gloryx"
+            }
         }
     }
 }

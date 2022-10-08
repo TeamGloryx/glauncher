@@ -5,6 +5,9 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import cat.i
 import cat.try_
+import cat.ui.dlg.MaybeState
+import cat.ui.dlg.getValue
+import cat.ui.dlg.setValue
 import com.sun.management.OperatingSystemMXBean
 import kotlinx.coroutines.CoroutineScope
 import net.gloryx.glauncher.logic.jre.Jre.inlineThrow
@@ -44,4 +47,6 @@ object Static {
     val colors = darkColors(color(0x00ffaf), secondary = color(0x08afd), surface = Color.DarkGray)
 
     const val version = "0.8"
+
+    var process by MaybeState<Process>()
 }

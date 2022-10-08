@@ -3,36 +3,26 @@ package net.gloryx.glauncher.logic.target
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.capitalize
 import cat.collections.findOneAndReplace
-import cat.reflect.cast
-import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.*
 import net.gloryx.glauncher.logic.Launcher
-import net.gloryx.glauncher.logic.auth.NotAuthenticatedException
 import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloading
 import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.logic.jre.Jre
+import net.gloryx.glauncher.model.LL
 import net.gloryx.glauncher.model.Mods
 import net.gloryx.glauncher.model.MojangLinker
+import net.gloryx.glauncher.ui.debug
 import net.gloryx.glauncher.util.*
-import net.gloryx.glauncher.util.db.DB
-import net.gloryx.glauncher.util.db.sql.AuthTable
 import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
-import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.AuthState.getUUID
 import net.gloryx.glauncher.util.state.AuthState.ign
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
-import java.util.UUID
 
 private val json = Json {
     isLenient = true
@@ -45,10 +35,7 @@ enum class LaunchTarget(
     val mod: String = "forge", val javaVersion: String = "8"
 ) {
     SKYBLOCK(normalName = "SkyBlock"), DAYZ(normalName = "DayZ", painting = P.Main.dayz), SMP(
-        "1_19_1",
-        "Survival",
-        P.Main.skyblock,
-        "fabric"
+        "1_19_1", "Survival", P.Main.survival, "fabric"
     ) {
         override suspend fun run() {
             println("launch target running")
@@ -100,23 +87,21 @@ enum class LaunchTarget(
                 args
             }
     },
-    VANILLA(normalName = "Vanilla", mod = "vanilla") {
+    VANILLA(normalName = "Vanilla", mod = "vanilla", painting = P.Main.vanilla) {
         private suspend fun vm() = versionManifest().conf
-        private suspend fun Downloading.libraries() {
-            val c = vm().getConfigList("libraries")
 
-            c.forEach { cnf ->
-                if (cnf.getConfigList("rules").any {
-                        it.getString("action") == "allow" && if (it.hasPath("os.name")) Static.osName == it.getString("os.name") else true
-                    } || cnf.getConfigList("rules").isEmpty())
-                    library(cnf.getString("downloads.artifact.url"), cnf.getString("name"))
-            }
+        override suspend fun Downloading.doLibraries() {
+            val ll = LL.sixteen.mapped.also(::debug)
+
+            ll.forEach { (a, b) -> download(DownloadJob(URL(b), Static.root.resolve("libraries/sixteen/$a"))) }
         }
 
         override suspend fun install() {
             Jre.download(this)
 
             downloading {
+                doLibraries()
+
                 download(DownloadJob(URL(vm().getConfig("downloads.client").getString("url")!!), verFile)) // 1.16.5.jar
 
                 download(
@@ -125,44 +110,57 @@ enum class LaunchTarget(
                         vdf.resolve("$ver.json")
                     )
                 )
-
-                libraries()
             }
+        }
+
+        override val classpath: MutableList<String> = run {
+            val list = mutableListOf<String>()
+
+            getCp(list, libraries)
+
+            list.add(verFile.absolutePath)
+
+            list
         }
 
         override suspend fun run() {
             Launcher.start(this)
         }
 
-        override val mcArgs: MutableList<String> get() = run {
-            val args = mutableListOf(
-                "--username",
-                ign ?: "Steve",
-                "--version",
-                ver,
-                "--gameDir",
-                dir.rs,
-                "--assetsDir",
-                Assets.assets.rs,
-                "--assetIndex",
-                "1.16",
-                "--uuid",
-                "${getUUID()}",
-                "--accessToken",
-                Secret.token,
-                "--userType",
-                "mojang",
-                "--versionType",
-                "release"
-            )
+        override val mcArgs: MutableList<String>
+            get() = run {
+                val args = mutableListOf(
+                    "--username",
+                    ign ?: "Steve",
+                    "--version",
+                    ver,
+                    "--gameDir",
+                    dir.rs,
+                    "--assetsDir",
+                    Assets.assets.rs,
+                    "--assetIndex",
+                    "1.16",
+                    "--uuid",
+                    "${getUUID()}",
+                    "--accessToken",
+                    Secret.token,
+                    "--userType",
+                    "mojang",
+                    "--versionType",
+                    "release"
+                )
 
-            args
-        }
+                args
+            }
+
+        override val main: String = "net.minecraft.client.main.Main"
     };
 
     open suspend fun run() {}
 
     open suspend fun install() {}
+
+    open suspend fun Downloading.doLibraries() {}
 
     val normalName = normalName ?: name.capitalize(LocalLocale)
 
@@ -170,13 +168,17 @@ enum class LaunchTarget(
 
     val natives: String = dir.resolve("natives").absolutePath
 
-    val libraries = dir.resolve("libraries")
+    val libraries = Static.root.resolve(
+        "libraries/${
+            if (version.contains("19")) "nineteen" else "sixteen"
+        }"
+    ).also(File::mkdirs)
     val ver = version.replace('_', '.')
 
     open val verDir = ver
     open val vdf = dir.resolve("versions/$ver").also(File::mkdirs)
 
-    val main = when (mod) {
+    open val main = when (mod) {
         "forge" -> "cpw.mods.modlauncher.Launcher"
         "fabric" -> "net.fabricmc.loader.impl.launch.knot.KnotClient"
         "vanilla" -> "net.minecraft.client.main.Minecraft"
@@ -216,22 +218,18 @@ enum class LaunchTarget(
 
     open val verFile = dir.resolve("versions/$ver/$ver.jar").also(File::createNewFile)
 
-    open val classpath = mutableListOf<String>().also {
-        getCp(it, libraries)
-        it.add("versions/$verDir/$verDir.jar")
-    }
+    open val classpath
+        get() = mutableListOf<String>().also {
+            getCp(it, libraries)
+            it.add(verFile.absolutePath)
+        }
 
     open val jvmArgs: List<String> = listOf()
 
-    private fun getCp(list: MutableList<String>, file: File) {
-        if (file.isDirectory) {
-            for (i in file.listFiles()!!) {
-                if (i.isDirectory) getCp(list, i)
-            }
-        } else {
-            if (file.extension == "jar") {
-                list.add(file.toRelativeString(Static.root))
-            }
+    protected open fun getCp(list: MutableList<String>, file: File) {
+        fun addIt() {
+            if (file.extension == "jar") list.add(file.absolutePath)
         }
+        if (file.isDirectory) for (i in file.listFiles()!!) getCp(list, i) else addIt()
     }
 }

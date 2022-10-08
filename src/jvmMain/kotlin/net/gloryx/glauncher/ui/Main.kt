@@ -18,11 +18,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cat.map
 import cat.ui.intl.Languages
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.gloryx.glauncher.logic.Launcher
 import net.gloryx.glauncher.logic.download.Downloader
 import net.gloryx.glauncher.ui.auth.AuthDialog
-import net.gloryx.glauncher.ui.nav.SelectTarget
 import net.gloryx.glauncher.ui.nav.TargetNav
 import net.gloryx.glauncher.ui.nav.TargetState
 import net.gloryx.glauncher.ui.settings.Settings
@@ -34,7 +37,6 @@ import net.gloryx.glauncher.util.res.lang.from
 import net.gloryx.glauncher.util.res.lang.withLanguage
 import net.gloryx.glauncher.util.state.AuthState
 import net.gloryx.glauncher.util.state.MainScreen
-import net.gloryx.glauncher.util.state.SettingsState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -101,11 +103,14 @@ fun Main() {
                 }
             }, isFloatingActionButtonDocked = true, floatingActionButton = {
                 GButton({
-                    Launcher.play(MainScreen.selected)
+                    if (Static.process != null)
+                        coro.launch { withContext(Dispatchers.IO) { Static.process?.destroyForcibly() } }
+                    else
+                        Launcher.play(MainScreen.selected)
                 }, {
-                    Icon(Icons.Rounded.PlayArrow, "Play!")
+                    Icon((Static.process == null).map(Icons.Rounded.PlayArrow, Icons.Rounded.ExitToApp), null)
                 }, shape = RoundedCornerShape(10)) {
-                    Text("Play!")
+                    Text((Static.process == null).map("Play!", "Stop"))
                 }
             }) { padding ->
                 AuthDialog()

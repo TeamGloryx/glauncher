@@ -15,7 +15,6 @@ object DB {
     }
 
     val users get() = transaction(Sql.db) {
-        addLogger(StdOutSqlLogger)
         AuthTable.selectAll().map { AuthUser(it[uuid], it[ip], it[hash], it[nickname]) }
     }
 }

@@ -63,7 +63,7 @@ object Assets {
 
         withContext(Dispatchers.IO) {
             val zf = Static.root.resolve(dest)
-            val file = Static.root.resolve(dst)
+            val file = Static.root.resolve(dst).also(File::mkdirs)
             val buf = byteArrayOf()
             val zip = ZipInputStream(FileInputStream(zf))
             var entry = zip.nextEntry

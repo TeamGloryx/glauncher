@@ -9,7 +9,10 @@ import java.io.File
 import java.net.URL
 
 data class DownloadJob(val url: URL, val destination: File = Static.root.resolve("./assets")) : LazyDeferred<Response> {
-    constructor(destDir: String, url: URL) : this(url, Static.root.resolve(destDir).resolve(url.file.split('/').last()).also(::println))
+    constructor(destDir: String, url: URL) : this(
+        url,
+        Static.root.resolve(destDir).resolve(url.file.split('/').last()).also(::println)
+    )
 
     private var compl: Response? = null
 
@@ -21,13 +24,18 @@ data class DownloadJob(val url: URL, val destination: File = Static.root.resolve
         if (!destination.exists())
             destination.createNewFile()
     }
+
     private var request = Request.Builder().get().url(url)
     fun req(scope: Request.Builder.() -> Unit = {}) = req(request.apply(scope).build())
-    fun req(request: Request) { this.request = request.newBuilder() }
+    fun req(request: Request) {
+        this.request = request.newBuilder()
+    }
 
     constructor(url: URL, destination: String) : this(url, Static.root.resolve(destination))
 
-    override suspend fun await(): Response = Downloader.client.newCall(request.build()).await()
+    override suspend fun await(): Response = Downloader.client.newCall(request.build()).await().also { compl = it }
+
+    suspend fun download() = apply { Downloader.download(this) }.file
 
 
     val file get() = destination

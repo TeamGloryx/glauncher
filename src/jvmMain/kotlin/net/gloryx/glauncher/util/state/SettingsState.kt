@@ -16,6 +16,7 @@ import cat.ui.dlg.State
 import cat.ui.dlg.useState
 import cat.ui.text.*
 import catfish.winder.colors.*
+import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.GSlider
 import net.gloryx.glauncher.util.Spacer
 import net.gloryx.glauncher.util.Static
@@ -28,7 +29,7 @@ object SettingsState {
     @OptIn(ExperimentalFoundationApi::class)
     val settings = settings {
         group("Launch") {
-            setting("RAM", ram) { currRAM ->
+            setting("RAM", ram) { (currRAM, setRAM) ->
                 val (state, setState) = useState(currRAM / 512f)
                 val range = 512..Static.physicalMemory
                 val valueRange = 1f..range.last.f.div(512f)
@@ -37,7 +38,7 @@ object SettingsState {
                         GSlider(
                             state, {
                                 setState(it.coerceIn(valueRange))
-                                ram.value = (it.roundToInt() * 512).coerceIn(range)
+                                setRAM((it.roundToInt() * 512).coerceIn(range))
                             }, valueRange = valueRange, steps = range.count { it % 512 == 0 } - 1
                         )
                         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -47,14 +48,14 @@ object SettingsState {
                         }
                         TextField("$currRAM", {
                             val i = it.toInt()
-                            ram.value = i
+                            setRAM(i)
                             setState(i / 512f)
                         }, Modifier.align(Alignment.CenterHorizontally), textStyle = LocalTextStyle.current.copy(MaterialTheme.colors.onBackground), isError = currRAM !in range)
                         Text("MB", Modifier.align(Alignment.CenterHorizontally))
                     }
                 }
             }
-            setting("Enable old SMP version (1.16.5)?", oldSMP) { smp ->
+            setting("Enable old SMP version (1.16.5)?", oldSMP) { (smp) ->
                 Column {
                     Text("[Recommended on 32-bit Java]")
                     Row(Modifier.align(Alignment.Start).onClick { oldSMP.value = !smp }) {
@@ -73,6 +74,14 @@ object SettingsState {
                             Modifier.align(Alignment.CenterVertically)
                         )
                     }
+                }
+            }
+        }
+        group("Console") {
+            setting("Autoscroll", Console.doAutoscroll) { (it, change) ->
+                Column {
+                    Text("Makes the console automatically scroll to the bottom.")
+                    Switch(it, change)
                 }
             }
         }

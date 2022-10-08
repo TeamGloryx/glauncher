@@ -1,22 +1,30 @@
 package net.gloryx.glauncher.util
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import cat.f
-import cat.try_
+import cat.ui.dlg.forget
+import cat.ui.dlg.useState
+import catfish.winder.colors.Black
+import catfish.winder.colors.Transparent
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import net.gloryx.glauncher.util.state.MainScreen
 import java.io.File
 
@@ -46,6 +54,22 @@ fun GButton(
     content: @Composable RowScope.() -> Unit = {}
 ) {
     Button(click, enabled = enabled, colors = colors, shape = shape, modifier = modifier) {
+        icon?.let {
+            it()
+            Spacer(2.dp)
+        }
+        content()
+    }
+}
+
+@Composable
+fun GTextButton(
+    click: () -> Unit = {}, icon: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.buttonColors(Transparent, Black, Transparent, Black), enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(30),
+    content: @Composable RowScope.() -> Unit = {}
+) {
+    TextButton(click, modifier, enabled, colors = colors, shape = shape) {
         icon?.let {
             it()
             Spacer(2.dp)
@@ -111,10 +135,45 @@ fun GSlider(
     onValueChangeFinished: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     colors: SliderColors = SliderDefaults.colors()
-) = GSlider(state.component1(), state.component2(), modifier, enabled, valueRange, steps, onValueChangeFinished, interactionSource, colors)
+) = GSlider(
+    state.component1(),
+    state.component2(),
+    modifier,
+    enabled,
+    valueRange,
+    steps,
+    onValueChangeFinished,
+    interactionSource,
+    colors
+)
 
 val String.conf: Config get() = let(ConfigFactory::parseString)
 
 val File.rs get() = toRelativeString(Static.root)
 
-fun CoroutineScope.yeet(block: suspend CoroutineScope.() -> Unit) = launch(block = block)
+@Composable
+@Suppress("nothing_to_inline") // forget is inline.
+inline fun forgetInteractionSource() = forget { MutableInteractionSource() }
+
+@Composable
+fun RowScope.Splitter(
+    width: Dp, modifier: Modifier = Modifier, color: Color = MaterialTheme.colors.secondary,
+    content: @Composable RowScope.() -> Unit
+) {
+    val (height, setHeight) = useState(0.dp)
+
+    Box(
+        Modifier
+            .align(Alignment.CenterVertically)
+            .width(width)
+            .height(height)
+            .graphicsLayer(alpha = 1f)
+            .background(color)
+    )
+    Box(Modifier.useHeightRef(setHeight)) {
+        content(this@Splitter)
+    }
+}
+
+@Composable
+fun Modifier.splitter(width: Dp, color: Color = MaterialTheme.colors.secondary) = null
