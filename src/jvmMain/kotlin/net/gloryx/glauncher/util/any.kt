@@ -5,13 +5,20 @@ package net.gloryx.glauncher.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
+import cat.i
 import cat.ui.dlg.getValue
 import cat.ui.dlg.setValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.newCoroutineContext
+import net.gloryx.glauncher.logic.download.Downloader
+import okio.source
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
+import java.io.Reader
+import java.io.Writer
 import java.nio.ByteBuffer
 import kotlin.reflect.KProperty
 
@@ -67,7 +74,9 @@ val coro get() = Static.scope
  * Waits for [expr] return value to become true, else delay for [step]ms
  * **BEWARE** [expr] is executed every [step]ms (e.g. very frequently)
  */
-suspend fun waitFor(step: Long = 500, expr: () -> Boolean) { while (!expr()) delay(step) }
+suspend fun waitFor(step: Long = 500, expr: () -> Boolean) {
+    while (!expr()) delay(step)
+}
 
 operator fun File.getValue(that: Any?, prop: KProperty<*>) = readText()
 operator fun File.setValue(that: Any?, prop: KProperty<*>, data: String) = writeText(data)
@@ -79,9 +88,20 @@ class VarOutputStream(state: MutableState<String>) : OutputStream() {
     }
 
     override fun flush() {
-        
+
     }
 }
 
 fun File.isEmpty() = (if (isDirectory) length() == 0L || listFiles().isNullOrEmpty() else length() == 0L) || !exists()
 fun File.isNotEmpty() = !isEmpty()
+
+inline fun File.mk() = also(File::mkdirs)
+
+inline fun <T> Flow<T>.io() = flowOn(Dispatchers.IO)
+inline fun <T> Flow<T>.iod() = io()
+
+fun InputStream.asFlow() = buffered().iterator().asFlow().io()
+fun Reader.asFlow() = buffered().lineSequence().asFlow().io()
+
+suspend fun Flow<String>.writeTo(writer: Writer, on: suspend (Int, String) -> Unit = { _, _ -> }) = collectIndexed { i, it -> writer.write(it); on(i, it) }
+suspend fun Flow<Byte>.copyTo(out: OutputStream, on: suspend (Int, Byte) -> Unit = { _, _ -> }) = collectIndexed { i, it -> out.write(it.i); on(i, it) }

@@ -1,9 +1,9 @@
 package net.gloryx.glauncher.logic.download
 
 import io.ktor.util.cio.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.plsCollect
@@ -28,14 +28,20 @@ object Downloader {
         scope.launch { register() }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val downloader = CoroutineScope(Dispatchers.IO.limitedParallelism(30))
+
     private suspend inline fun register() {
         downloads.plsCollect { job ->
             job.tryAwait()?.let {
                 if (job.destination.length() != 0L) return@plsCollect Console.warn("./${job.destination.rs} already exists")
                 Console.info("Url: \"${job.url}\"; Dst: \"./${job.destination.toRelativeString(Static.root)}\"")
-                it.body?.let { body ->
-                    if (body.contentType()?.type?.startsWith("text") == true) body.charStream().copyTo(job.destination.writer())
-                    else body.byteStream().copyTo(FileOutputStream(job.destination))
+                downloader.launch {
+                    it.body?.let { body ->
+                        if (body.contentType()?.type?.startsWith("text") == true) body.charStream()
+                            .copyTo(job.destination.writer())
+                        else body.byteStream().copyTo(FileOutputStream(job.destination))
+                    }
                 }
             } ?: Console.warn("${job.url} failed.")
         }

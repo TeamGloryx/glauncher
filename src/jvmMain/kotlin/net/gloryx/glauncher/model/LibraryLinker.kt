@@ -11,7 +11,7 @@ value class LibraryLinker(val array: List<String>) {
     val mapped
         get() = array.filter { !it.contains(Regex("windows|linux")) }.associateWith { "https://libraries.minecraft.net/$it" }
 
-    val natives get() = array.filter { it.contains(Regex("windows|linux")) }
+    val natives get() = array.filter { it.contains(Regex("windows|linux")) }.associateWith { "https://libraries.minecraft.net/$it" }
 }
 
 object LL {

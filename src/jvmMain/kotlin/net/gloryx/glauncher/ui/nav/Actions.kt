@@ -43,6 +43,17 @@ object Actions : TargetState.Entry("Debug") {
                 }
             }
             item {
+                Button({
+                    coro.launch {
+                        downloading {
+                            LaunchTarget.SMP_1_16.apply { doNatives() }
+                        }
+                    }
+                }) {
+                    Text("Vanilla Natives")
+                }
+            }
+            item {
                 Column {
                     Text("Auth:")
                     Row {

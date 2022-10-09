@@ -3,7 +3,9 @@ package net.gloryx.glauncher.logic.target
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.capitalize
 import cat.collections.findOneAndReplace
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.*
 import net.gloryx.glauncher.logic.Launcher
@@ -21,6 +23,7 @@ import net.gloryx.glauncher.util.res.paintable.P
 import net.gloryx.glauncher.util.state.AuthState.getUUID
 import net.gloryx.glauncher.util.state.AuthState.ign
 import net.gloryx.glauncher.util.state.SettingsState
+import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
@@ -98,13 +101,38 @@ enum class LaunchTarget(
             ll.forEach { (a, b) -> download(DownloadJob(URL(b), Static.root.resolve("libraries/sixteen/$a"))) }
         }
 
+        override suspend fun Downloading.doNatives() {
+            val ll = LL.sixteen.natives.also(::debug)
+
+            ll.forEach { (a, b) ->
+                val file = dir.resolve("natives/$a")
+                download(DownloadJob(URL(b), file))
+                waitFor { file.isNotEmpty() }
+                withContext(Dispatchers.IO) {
+                    ZipFile(file).use { zip ->
+                        zip.fileHeaders.also(::debug)
+                            .filter { it.fileName.endsWith(".so") || it.fileName.endsWith(".dll") }
+                            .forEach { zip.extractFile(it, natives) }
+                    }
+                }
+
+                File(natives).listFiles { it: File -> it.isDirectory }?.forEach(File::deleteRecursively)
+            }
+        }
+
         override suspend fun install() {
             Jre.download(this)
 
             downloading {
                 doLibraries()
+                doNatives()
 
-                download(DownloadJob(URL("https://launcher.mojang.com/v1/objects/37fd3c903861eeff3bc24b71eed48f828b5269c8/client.jar"), verFile)) // 1.16.5.jar
+                download(
+                    DownloadJob(
+                        URL("https://launcher.mojang.com/v1/objects/37fd3c903861eeff3bc24b71eed48f828b5269c8/client.jar"),
+                        verFile
+                    )
+                ) // 1.16.5.jar
 
                 download(
                     DownloadJob(
@@ -165,22 +193,23 @@ enum class LaunchTarget(
     open suspend fun install() {}
 
     open suspend fun Downloading.doLibraries() {}
+    open suspend fun Downloading.doNatives() {}
 
     val normalName = normalName ?: name.capitalize(LocalLocale)
 
-    val dir = Static.root.resolve(".strangeness/${name.lowercase()}").also(File::mkdirs)
+    val dir = Static.root.resolve(".strangeness/${name.lowercase()}").mk()
 
-    val natives: String = dir.resolve("natives").also(File::mkdirs).absolutePath
+    val natives: String = dir.resolve("natives").mk().absolutePath
 
     val libraries = Static.root.resolve(
         "libraries/${
             if (version.contains("19")) "nineteen" else "sixteen"
         }"
-    ).also(File::mkdirs)
+    ).mk()
     val ver = version.replace('_', '.')
 
     open val verDir = ver
-    open val vdf = dir.resolve("versions/$ver").also(File::mkdirs)
+    open val vdf = dir.resolve("versions/$ver").mk()
 
     open val main = when (mod) {
         "forge" -> "cpw.mods.modlauncher.Launcher"
