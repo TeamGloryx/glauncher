@@ -7,7 +7,7 @@ object P : Pa("paintable") {
     object Main : Pa(P, "main") {
         val skyblock by null
         val dayz by null
-        val vanilla by null
+        val oldSMP by "old_smp"
         val survival by null
     }
 }

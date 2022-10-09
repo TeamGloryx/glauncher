@@ -9,7 +9,9 @@ import net.gloryx.glauncher.util.Static
 @JvmInline
 value class LibraryLinker(val array: List<String>) {
     val mapped
-        get() = array.associateWith { "https://libraries.minecraft.net/$it" }
+        get() = array.filter { !it.contains(Regex("windows|linux")) }.associateWith { "https://libraries.minecraft.net/$it" }
+
+    val natives get() = array.filter { it.contains(Regex("windows|linux")) }
 }
 
 object LL {

@@ -1,11 +1,9 @@
 package net.gloryx.glauncher.util.state
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -14,15 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.AlignmentLine
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cat.ui.dlg.useState
 import cat.void
 import catfish.winder.colors.Gray200
 import net.gloryx.glauncher.util.*
@@ -49,7 +40,7 @@ class SettingsDSL {
         fun render() {
             Column(Modifier.border(1.dp, Color.LightGray).padding(10.dp)) {
                 Text(name)
-                Row(Splitter(3.dp)) {
+                Row(Modifier.verticalSplitter(3.dp, 3.dp)) {
                     Spacer(4.dp)
                     LazyColumn(
                         Modifier.absolutePadding(left = 10.dp),

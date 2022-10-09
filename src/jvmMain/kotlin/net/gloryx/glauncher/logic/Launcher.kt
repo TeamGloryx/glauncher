@@ -40,7 +40,7 @@ object Launcher {
     @OptIn(DelicateCoroutinesApi::class)
     suspend fun start(target: LaunchTarget) {
         val dir = target.dir.absolutePath
-        val args = mutableListOf(Jre.javaExecOf(target).rs)
+        val args = mutableListOf(Jre.javaExecOf(target).absolutePath)
 
         if (System.getProperty("os.name")
                 .let { it.startsWith("Windows") && it.endsWith("10") }
@@ -67,7 +67,7 @@ object Launcher {
         args += target.mcArgs
 
 
-        val proc = ProcessBuilder().command(args).inheritIO()
+        val proc = ProcessBuilder().command(args).directory(target.dir).inheritIO()
 
         Console.debug(args)
 

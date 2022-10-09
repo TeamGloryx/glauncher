@@ -26,6 +26,7 @@ import cat.try_
 import cat.ui.Suspend
 import cat.ui.dlg.*
 import catfish.winder.colors.Gray700
+import kotlinx.coroutines.launch
 import net.gloryx.glauncher.ui.Console.sb
 import net.gloryx.glauncher.util.GButton
 import net.gloryx.glauncher.util.Static
@@ -53,26 +54,27 @@ object Console {
 
     internal var sb by State(false)
 
-    fun send(message: Any?) {
+    inline fun send(message: Any?) {
         text += "\n$message"
     }
 
-    fun log(message: Any?, level: Level = Level.INFO) =
+    inline fun log(message: Any?, level: Level = Level.INFO) =
         if (level != Level.TRACE)
             send("$level [${locateClass()}/] $message")
-        else send("$level [${locateClass()}/] $message\n${Exception().stackTrace.joinToString { "\tat $it" }}")
+        else send("$level [${locateClass()}/] $message\n${Exception().stackTrace.joinToString("\n") { "    at $it" }}")
 
-    fun info(message: Any?) = log(message)
-    fun warn(message: Any?) = log(message, Level.WARN)
-    fun error(message: Any?) = log(message, Level.ERROR)
-    fun debug(message: Any?) = log(message, Level.DEBUG)
+    inline fun info(message: Any?) = log(message)
+    inline fun warn(message: Any?) = log(message, Level.WARN)
+    inline fun error(message: Any?) = log(message, Level.ERROR)
+    inline fun debug(message: Any?) = log(message, Level.DEBUG)
 
-    fun trace(message: Any?) = log(message, Level.TRACE)
+    inline fun trace(message: Any?) = log(message, Level.TRACE)
 
     @Suppress("nothing_to_inline") // stack length increases without inlining
-    private inline fun locateClass() =
-        try_ { StackLocatorUtil.getCallerClass(3) }?.simpleName?.takeUnless(String::isEmpty) // try at depth 3 (e.g. normal class)
-            ?: (try_ { StackLocatorUtil.getCallerClass(4) }?.simpleName?.takeUnless(String::isEmpty)
+    @PublishedApi
+    internal inline fun locateClass() =
+        try_ { StackLocatorUtil.getCallerClass(1) }?.simpleName?.takeUnless(String::isEmpty) // try at depth 3 (e.g. normal class)
+            ?: (try_ { StackLocatorUtil.getCallerClass(2) }?.simpleName?.takeUnless(String::isEmpty)
                 ?: "STDOUT") // try at depth 4 (anon class)
 
     fun scrollToBottom() {
@@ -84,11 +86,13 @@ object Console {
 fun ConsoleComponent() {
     val scroll = rememberScrollState(0)
 
+    val coro = currentCoroutine
+
     suspend fun scrollBack() {
         scroll.animateScrollTo(scroll.maxValue)
     }
 
-    if (sb) Suspend { scrollBack() }
+    if (sb) coro.launch { scrollBack() }
 
     var dialog by Console.dialog
 
@@ -99,7 +103,7 @@ fun ConsoleComponent() {
                     Gray700
                 ).border(
                     3.dp, MaterialTheme.colors.primarySurface
-                ).fillMaxWidth()
+                )
             ) {
                 Row {
                     Column {
@@ -107,9 +111,9 @@ fun ConsoleComponent() {
                         Console.doAutoscroll.let { (it, change) -> Switch(it, change) }
                     }
                     GButton({
-
+                        coro.launch { scrollBack() }
                     }) {
-
+                        Text("Scroll down")
                     }
                 }
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {

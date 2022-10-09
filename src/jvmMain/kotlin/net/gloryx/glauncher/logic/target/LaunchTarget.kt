@@ -20,6 +20,7 @@ import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
 import net.gloryx.glauncher.util.state.AuthState.getUUID
 import net.gloryx.glauncher.util.state.AuthState.ign
+import net.gloryx.glauncher.util.state.SettingsState
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
@@ -87,7 +88,8 @@ enum class LaunchTarget(
                 args
             }
     },
-    VANILLA(normalName = "Vanilla", mod = "vanilla", painting = P.Main.vanilla) {
+    SMP_1_16(normalName = "SMP 1.16.5", mod = "vanilla", painting = P.Main.oldSMP) {
+        override fun canBeDisplayed() = SettingsState.oldSMP.value
         private suspend fun vm() = versionManifest().conf
 
         override suspend fun Downloading.doLibraries() {
@@ -102,7 +104,7 @@ enum class LaunchTarget(
             downloading {
                 doLibraries()
 
-                download(DownloadJob(URL(vm().getConfig("downloads.client").getString("url")!!), verFile)) // 1.16.5.jar
+                download(DownloadJob(URL("https://launcher.mojang.com/v1/objects/37fd3c903861eeff3bc24b71eed48f828b5269c8/client.jar"), verFile)) // 1.16.5.jar
 
                 download(
                     DownloadJob(
@@ -135,9 +137,9 @@ enum class LaunchTarget(
                     "--version",
                     ver,
                     "--gameDir",
-                    dir.rs,
+                    dir.absolutePath,
                     "--assetsDir",
-                    Assets.assets.rs,
+                    Assets.assets.absolutePath,
                     "--assetIndex",
                     "1.16",
                     "--uuid",
@@ -156,6 +158,8 @@ enum class LaunchTarget(
         override val main: String = "net.minecraft.client.main.Main"
     };
 
+    open fun canBeDisplayed() = true
+
     open suspend fun run() {}
 
     open suspend fun install() {}
@@ -166,7 +170,7 @@ enum class LaunchTarget(
 
     val dir = Static.root.resolve(".strangeness/${name.lowercase()}").also(File::mkdirs)
 
-    val natives: String = dir.resolve("natives").absolutePath
+    val natives: String = dir.resolve("natives").also(File::mkdirs).absolutePath
 
     val libraries = Static.root.resolve(
         "libraries/${

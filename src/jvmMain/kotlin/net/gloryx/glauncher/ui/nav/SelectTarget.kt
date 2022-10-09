@@ -43,7 +43,7 @@ object SelectTarget : TargetState.Entry("Select") {
         LazyVerticalGrid(
             GridCells.Adaptive(200.dp + cardBorder), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(LaunchTarget.values(), LaunchTarget::ordinal) {
+            items(LaunchTarget.values().filter(LaunchTarget::canBeDisplayed), LaunchTarget::ordinal) {
                 val name = it.normalName
                 val isSelected by forget { derivedStateOf { MainScreen.selected == it } }
                 Card(

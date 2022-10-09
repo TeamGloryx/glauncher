@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -17,13 +19,13 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import cat.f
+import cat.map
 import cat.ui.dlg.forget
 import cat.ui.dlg.useState
 import catfish.winder.colors.Black
 import catfish.winder.colors.Transparent
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.gloryx.glauncher.util.state.MainScreen
 import java.io.File
@@ -156,7 +158,7 @@ val File.rs get() = toRelativeString(Static.root)
 inline fun forgetInteractionSource() = forget { MutableInteractionSource() }
 
 @Composable
-fun RowScope.Splitter(
+fun Splitter(
     width: Dp, modifier: Modifier = Modifier, color: Color = MaterialTheme.colors.secondary,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -164,16 +166,43 @@ fun RowScope.Splitter(
 
     Box(
         Modifier
-            .align(Alignment.CenterVertically)
             .width(width)
             .height(height)
             .graphicsLayer(alpha = 1f)
             .background(color)
     )
-    Box(Modifier.useHeightRef(setHeight)) {
-        content(this@Splitter)
+    Row(Modifier.useHeightRef(setHeight)) {
+        content()
     }
 }
 
 @Composable
-fun Modifier.splitter(width: Dp, color: Color = MaterialTheme.colors.secondary) = null
+fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, color: Color = MaterialTheme.colors.secondary) = composed {
+    val (height, setHeight) = useState(0.dp)
+
+    Modifier.useHeightRef(setHeight).padding(start = width + 3.dp)
+        .drawBehind { drawLine(color, Offset(0f, take.value), Offset(0f, height.value - take.value), width.value) }
+}
+
+@Composable
+fun Modifier.horizontalSplitter(
+    height: Dp, take: Dp = 1.dp, after: Boolean = true, color: Color = MaterialTheme.colors.secondary
+) = composed {
+    val (width, setWidth) = useState(0.dp)
+    val (h, setH) = useState(0.dp)
+
+    Modifier.useWidthRef(setWidth).then(
+        after.map(
+            Modifier.useHeightRef(setH).padding(end = height - take),
+            Modifier.padding(top = height + take)
+        )
+    )
+        .drawBehind {
+            drawLine(
+                color,
+                Offset(take.value, after.map(h.value + take.value, 0f)),
+                Offset(width.value - take.value, after.map(h.value + take.value, 0f)),
+                height.value
+            )
+        }
+}

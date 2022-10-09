@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.*
+import androidx.compose.ui.text.input.KeyboardType
 import cat.f
 import cat.map
 import cat.ui.dlg.State
@@ -23,7 +25,7 @@ import net.gloryx.glauncher.util.Static
 import kotlin.math.roundToInt
 
 object SettingsState {
-    val oldSMP = State(false)
+    val oldSMP = State(true)
     val ram = State(4096.coerceAtMost(Static.physicalMemory))
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -46,11 +48,19 @@ object SettingsState {
                             Spacer(1)
                             Text("${range.last}MB")
                         }
-                        TextField("$currRAM", {
-                            val i = it.toInt()
-                            setRAM(i)
-                            setState(i / 512f)
-                        }, Modifier.align(Alignment.CenterHorizontally), textStyle = LocalTextStyle.current.copy(MaterialTheme.colors.onBackground), isError = currRAM !in range)
+                        TextField(
+                            "$currRAM",
+                            {
+                                val i = it.trim().toIntOrNull() ?: range.first
+                                setRAM(i)
+                                setState(i / 512f)
+                            },
+                            Modifier.align(Alignment.CenterHorizontally),
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(MaterialTheme.colors.onBackground),
+                            isError = currRAM !in range,
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                        )
                         Text("MB", Modifier.align(Alignment.CenterHorizontally))
                     }
                 }
