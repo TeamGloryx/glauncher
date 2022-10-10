@@ -118,6 +118,7 @@ enum class LaunchTarget(
 
                 File(natives).listFiles { it: File -> it.isDirectory }?.forEach(File::deleteRecursively)
             }
+            
         }
 
         override suspend fun install() {

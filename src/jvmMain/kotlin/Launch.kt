@@ -21,6 +21,6 @@ fun main() = application(exitProcessOnExit = true) {
         Static.window = window
         Main()
 
-        System.setOut(PrintStream(VarOutputStream(Console.textState)))
+        System.setOut(PrintStream(Console.stream))
     }
 }

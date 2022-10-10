@@ -46,7 +46,7 @@ object Static {
 
     val colors = darkColors(color(0x00ffaf), secondary = color(0x08afd), surface = Color.DarkGray)
 
-    const val version = "0.8"
+    const val version = "28"
 
     var process by MaybeState<Process>()
 }

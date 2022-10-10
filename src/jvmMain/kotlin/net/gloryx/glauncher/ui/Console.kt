@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import net.gloryx.glauncher.ui.Console.sb
 import net.gloryx.glauncher.util.GButton
 import net.gloryx.glauncher.util.Static
+import net.gloryx.glauncher.util.VarOutputStream
 import org.apache.logging.log4j.util.StackLocatorUtil
 import org.slf4j.event.Level
 
@@ -51,6 +52,8 @@ object Console {
 
     val doAutoscroll = State(true)
     var autoscroll by doAutoscroll
+
+    val stream = VarOutputStream(textState)
 
     internal var sb by State(false)
 

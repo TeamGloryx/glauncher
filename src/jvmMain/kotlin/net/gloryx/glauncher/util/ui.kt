@@ -1,8 +1,10 @@
+@file:Suppress("unused", "nothing_to_inline")
+
 package net.gloryx.glauncher.util
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -12,7 +14,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.ExperimentalUnitApi
@@ -81,15 +82,8 @@ fun GTextButton(
 }
 
 @Composable
-fun <T : Any> sus(fn: suspend () -> T, recomposer: MutableState<out Any?> = mutableStateOf(null)): MutableState<T?> {
-    val scope = rememberCoroutineScope()
-    val state = remember(recomposer) { mutableStateOf<T?>(null) }
-    scope.launch {
-        state.value = fn()
-    }
-
-    return state
-}
+fun <T : Any> getSuspend(fn: suspend () -> T, recomposer: Any? = true): MutableState<T?> =
+    useState<T?>(null).also { LaunchedEffect(recomposer) { it.set(fn()) } }
 
 object GColors {
     val snackbar = color(0x222222)
@@ -158,30 +152,11 @@ val File.rs get() = toRelativeString(Static.root)
 inline fun forgetInteractionSource() = forget { MutableInteractionSource() }
 
 @Composable
-fun Splitter(
-    width: Dp, modifier: Modifier = Modifier, color: Color = MaterialTheme.colors.secondary,
-    content: @Composable RowScope.() -> Unit
-) {
-    val (height, setHeight) = useState(0.dp)
-
-    Box(
-        Modifier
-            .width(width)
-            .height(height)
-            .graphicsLayer(alpha = 1f)
-            .background(color)
-    )
-    Row(Modifier.useHeightRef(setHeight)) {
-        content()
-    }
-}
-
-@Composable
 fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, color: Color = MaterialTheme.colors.secondary) = composed {
     val (height, setHeight) = useState(0.dp)
 
     Modifier.useHeightRef(setHeight).padding(start = width + 3.dp)
-        .drawBehind { drawLine(color, Offset(0f, take.value), Offset(0f, height.value - take.value), width.value) }
+        .drawBehind { drawLine(color, Offset(0f, take.toPx()), Offset(0f, height.toPx() - take.toPx()), width.toPx()) }
 }
 
 @Composable
@@ -200,9 +175,9 @@ fun Modifier.horizontalSplitter(
         .drawBehind {
             drawLine(
                 color,
-                Offset(take.value, after.map(h.value + take.value, 0f)),
-                Offset(width.value - take.value, after.map(h.value + take.value, 0f)),
-                height.value
+                Offset(take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
+                Offset(width.toPx() - take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
+                height.toPx()
             )
         }
 }

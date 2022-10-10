@@ -100,8 +100,11 @@ inline fun File.mk() = also(File::mkdirs)
 inline fun <T> Flow<T>.io() = flowOn(Dispatchers.IO)
 inline fun <T> Flow<T>.iod() = io()
 
-fun InputStream.asFlow() = buffered().iterator().asFlow().io()
-fun Reader.asFlow() = buffered().lineSequence().asFlow().io()
+fun InputStream.asFlow() = buffered().iterator().asFlow()
+fun Reader.asFlow() = buffered().lineSequence().asFlow()
 
 suspend fun Flow<String>.writeTo(writer: Writer, on: suspend (Int, String) -> Unit = { _, _ -> }) = collectIndexed { i, it -> writer.write(it); on(i, it) }
 suspend fun Flow<Byte>.copyTo(out: OutputStream, on: suspend (Int, Byte) -> Unit = { _, _ -> }) = collectIndexed { i, it -> out.write(it.i); on(i, it) }
+
+inline fun <T> MutableState<T>.get() = value
+fun <T> MutableState<T>.set(value: T) = also { it.value = value }

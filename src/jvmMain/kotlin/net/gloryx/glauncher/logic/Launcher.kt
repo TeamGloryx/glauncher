@@ -2,12 +2,11 @@ package net.gloryx.glauncher.logic
 
 import cat.async.await
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flowOn
 import net.gloryx.glauncher.logic.jre.Jre
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.ui.Console
-import net.gloryx.glauncher.util.Static
-import net.gloryx.glauncher.util.rs
-import net.gloryx.glauncher.util.snackbar
+import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.state.AuthState
 import org.jetbrains.skiko.hostOs
 
@@ -20,14 +19,17 @@ object Launcher {
             }
             return
         }
-        if (!target.dir.exists() || target.dir.list().isNullOrEmpty()) target.install()
+        if (!target.dir.exists() || target.dir.list().isNullOrEmpty()) {
+            target.install()
+            snackbar("Installing ${target.normalName}...")
+        }
+
+        snackbar("Launching ${target.normalName}...")
 
         //Assets.prepare(target)
         target.run()
 
-        Console.info(target.mcArgs)
 
-        snackbar("Launching ${target.normalName}...", "Dismiss")
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -73,7 +75,10 @@ object Launcher {
 
         withContext(Dispatchers.IO) {
             Static.process = proc.start().also {
-                GlobalScope.launch {
+                launch {
+                    it.inputReader().asFlow().flowOn(Dispatchers.IO).writeTo(Console.stream.writer())
+                }
+                launch {
                     it.onExit().await()
                     Static.process = null
                 }
