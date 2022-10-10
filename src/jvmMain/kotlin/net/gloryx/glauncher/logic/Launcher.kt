@@ -51,10 +51,13 @@ object Launcher {
         if (Static.is32Bit) args += "-Xss1M"
 
         args += "-Djava.library.path=\"${target.natives}\""
+        args += "-Dorg.lwjgl.librarypath=${target.natives}"
+
+        args += target.jvmArgs
 
         args += listOf(
             "-Dminecraft.launcher.brand=gloryx",
-            "-Dminecraft.launcher.version=${Static.version}",
+            "-Dminecraft.launcher.version=${Static.version}"
         )
 
         args += "-cp"

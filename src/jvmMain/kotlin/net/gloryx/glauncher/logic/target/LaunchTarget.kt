@@ -39,29 +39,34 @@ enum class LaunchTarget(
     val mod: String = "forge", val javaVersion: String = "8"
 ) {
     SKYBLOCK(normalName = "SkyBlock"), DAYZ(normalName = "DayZ", painting = P.Main.dayz), SMP(
-        "1_19_1", "Survival", P.Main.survival, "fabric"
+        "1_19_1", "Survival", P.Main.survival, "fabric", "17"
     ) {
+        private val mll = LL.nineteen.mapped.also(::debug)
         override suspend fun run() {
-            println("launch target running")
-            Mods.Fabric("1.19.1").install(this)
-
             Launcher.start(this)
+        }
+
+        override suspend fun install() {
+            Mods.Fabric("1.19.1").install(this)
         }
 
         override val verDir: String = "fabric-loader-0.14.9-1.19.1"
 
         override val verFile: File = dir.resolve("$verDir/$verDir.jar")
 
-        @OptIn(ExperimentalSerializationApi::class)
-        override val classpath: MutableList<String> = mutableListOf<String>().apply {
-            val mf =
-                Json.decodeFromStream<Mods.Fabric.Manifest>(FileInputStream(dir.resolve("versions/$verDir/$verDir.json")))
-            addAll(mf.libraries.map {
-                "libraries/${it.name.split(':').joinToString("/")}/${
-                    it.name.split(':').let { ls -> "${ls[1]}-${ls[2]}${if (ls.size == 4) "-${ls[3]}" else ""}.jar" }
-                }" // net.fabricmc:fabric-loader:0.14.9 -> net/fabricmc/fabric-loader/fabric-loader-0.1.49.jar
-            })
-            add("versions/$verDir/$verDir.jar")
+        override fun getCp(list: MutableList<String>, file: File) { // faster
+            list.addAll(mll.map { (a) -> file.resolve(a) }.filter { it.isNotEmpty() }.map(File::getAbsolutePath))
+        }
+
+        override val classpath: MutableList<String> = run {
+            val list = mutableListOf<String>()
+
+            getCp(list, libraries)
+
+            list.add(verFile.absolutePath)
+            list.add(dir.resolve("$ver/$ver.jar").absolutePath)
+
+            list.distinct().toMutableList()
         }
 
         override val mcArgs: MutableList<String>
@@ -90,15 +95,17 @@ enum class LaunchTarget(
 
                 args
             }
+
+        override val jvmArgs: List<String> = listOf("-DFabricMcEmu=net.minecraft.client.main.Main")
     },
     SMP_1_16(normalName = "SMP 1.16.5", mod = "vanilla", painting = P.Main.oldSMP) {
         override fun canBeDisplayed() = SettingsState.oldSMP.value
         private suspend fun vm() = versionManifest().conf
 
-        override suspend fun Downloading.doLibraries() {
-            val ll = LL.sixteen.mapped.also(::debug)
+        private val mll = LL.sixteen.mapped.also(::debug)
 
-            ll.forEach { (a, b) -> download(DownloadJob(URL(b), Static.root.resolve("libraries/sixteen/$a"))) }
+        override suspend fun Downloading.doLibraries() {
+            mll.forEach { (a, b) -> download(DownloadJob(URL(b), Static.root.resolve("libraries/sixteen/$a"))) }
         }
 
         override suspend fun Downloading.doNatives() {
@@ -118,7 +125,7 @@ enum class LaunchTarget(
 
                 File(natives).listFiles { it: File -> it.isDirectory }?.forEach(File::deleteRecursively)
             }
-            
+
         }
 
         override suspend fun install() {
@@ -151,7 +158,7 @@ enum class LaunchTarget(
 
             list.add(verFile.absolutePath)
 
-            list
+            list.distinct().toMutableList()
         }
 
         override suspend fun run() {
@@ -185,6 +192,10 @@ enum class LaunchTarget(
             }
 
         override val main: String = "net.minecraft.client.main.Main"
+
+        override fun getCp(list: MutableList<String>, file: File) { // faster
+            list.addAll(mll.map { (a) -> file.resolve(a) }.filter { it.isNotEmpty() }.map(File::getAbsolutePath))
+        }
     };
 
     open fun canBeDisplayed() = true

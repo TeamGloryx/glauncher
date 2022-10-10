@@ -39,15 +39,15 @@ object Downloader {
                 downloader.launch {
                     it.body?.let { body ->
                         if (body.contentType()?.type?.startsWith("text") == true) body.charStream()
-                            .copyTo(job.destination.writer())
-                        else body.byteStream().copyTo(FileOutputStream(job.destination))
+                            .use { job.destination.writer().use { fs -> it.copyTo(fs) } }
+                        else body.byteStream().use { FileOutputStream(job.destination).use { fs -> it.copyTo(fs) } }
                     }
                 }
             } ?: Console.warn("${job.url} failed.")
         }
     }
 
-    suspend fun download(job: DownloadJob) = _downloads.emit(job).also { job.maybe?.close() }
+    suspend fun download(job: DownloadJob) = _downloads.emit(job)
 }
 
 suspend inline fun downloading(scope: suspend Downloading.() -> Unit) = scope(Downloader.helper)
