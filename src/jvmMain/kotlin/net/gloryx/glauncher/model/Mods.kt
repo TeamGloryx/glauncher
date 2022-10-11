@@ -3,6 +3,7 @@ package net.gloryx.glauncher.model
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import net.fabricmc.installer.LoaderVersion
@@ -13,25 +14,29 @@ import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloading
 import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.logic.jre.Jre
+import net.gloryx.glauncher.logic.target.Assets
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.asJson
 import net.gloryx.glauncher.util.conf
 import net.gloryx.glauncher.util.mk
+import java.io.File
 import java.net.URL
 
 object Mods {
     interface Conf {
-        suspend fun install(target: LaunchTarget)
+        val target: LaunchTarget
+        suspend fun install()
     }
 
     @Serializable
-    data class Fabric(val version: String, val loaderVersion: String = "0.14.9") : Conf {
+    data class Fabric(val version: String, val loaderVersion: String = "0.14.9", @kotlinx.serialization.Transient override val target: LaunchTarget = LaunchTarget.SMP) : Conf {
         @kotlinx.serialization.Transient var versionData = ConfigFactory.empty()
         @kotlinx.serialization.Transient var fabData = ConfigFactory.empty()
         val fabricLoader inline get() = "fabric-loader-$loaderVersion-$version"
-        override suspend fun install(target: LaunchTarget) {
+        override suspend fun install() {
             Jre.download(target)
+            Assets.check(target)
             versionData = ConfigFactory.parseString(target.versionManifest())
 
             println("Fabric running with $version and $loaderVersion")
@@ -51,7 +56,7 @@ object Mods {
                 download(DownloadJob(URL("https://maven.fabricmc.net/net/fabricmc/fabric-loader/$loaderVersion/fabric-loader-$loaderVersion.jar"), fl))
             }
 
-            target.dir.resolve("libraries").deleteRecursively()
+            migrateLibraries(target.dir.resolve("libraries"))
 
             fabData = fn.resolve("$fabricLoader.json").readText().conf
 
@@ -68,6 +73,12 @@ object Mods {
             LL.nineteen.mapped.mapValues { (_, b) -> URL(b) }.forEach { (loc, url) ->
                 download(DownloadJob(url, Static.root.resolve("libraries/nineteen/$loc")))
             }
+        }
+
+        fun migrateLibraries(file: File) {
+            file.listFiles()!!.forEach { it.copyRecursively(Static.root.resolve("libraries/nineteen/${it.name}").mk(), true) }
+
+            file.deleteRecursively()
         }
     }
 }

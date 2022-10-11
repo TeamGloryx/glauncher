@@ -3,31 +3,33 @@ package net.gloryx.glauncher.logic.target
 import cat.reflect.cast
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigValueFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloader
 import net.gloryx.glauncher.logic.download.downloading
-import net.gloryx.glauncher.util.Static
-import net.gloryx.glauncher.util.conf
-import net.gloryx.glauncher.util.fetch
-import net.gloryx.glauncher.util.json
+import net.gloryx.glauncher.util.*
+import java.awt.SystemColor.info
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
 import java.net.URL
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 
 
 object Assets {
     val dir get() = Static.root.resolve(".strangeness").apply { mkdirs() }
-    val assets = Static.root.resolve(".assets").apply { mkdirs(); resolve("indexes").mkdirs(); resolve("objects").mkdirs() }
+    val assets =
+        Static.root.resolve(".assets").apply { mkdirs(); resolve("indexes").mkdirs(); resolve("objects").mkdirs() }
+
+    val indexes = assets.resolve("indexes")
+    val objs = assets.resolve("objects")
 
     suspend fun assetIndex(target: LaunchTarget): Config {
         val indexURL = target.versionManifest().conf.getConfig("assetIndex").getString("url")
-        return fetch(indexURL).json().conf.withValue(
+        return (indexes.resolve(
+            "${
+                target.ver
+                    .take(4)
+                    .trim('.')
+            }.json"
+        ).nullIfEmpty()?.readAsync() ?: fetch(indexURL).json()).conf.withValue(
             "assetIndex",
             indexURL.split('/').last().let(ConfigValueFactory::fromAnyRef)
         ).withValue("assetIndexURL", indexURL.let(ConfigValueFactory::fromAnyRef))
@@ -38,74 +40,42 @@ object Assets {
         val td = dir.resolve("./$name")
 
         val a = assetIndex(target)
-        assets.resolve("indexes/${a.getString("assetIndex")}").also(File::createNewFile).writeText(fetch(a.getString("assetIndexURL")).json())
+        assets.resolve("indexes/${a.getString("assetIndex")}").also(File::createNewFile)
+            .writeText(fetch(a.getString("assetIndexURL")).json())
         val ai = a.getConfig("objects")!!.root().toMap()
 
         downloading {
             ai.mapValues { (_, b) -> b.unwrapped().cast<Map<String, Any>>()["hash"]!!.cast<String>() }
                 .onEach { (_, b) ->
                     val f2 = b.take(2)
-                    assets.resolve("objects/$f2").mkdirs()
+                    objs.resolve(f2).mkdirs()
                     download(
                         DownloadJob(
                             URL("http://resources.download.minecraft.net/$f2/$b"),
-                            assets.resolve("objects/$f2/$b").also(File::createNewFile)
+                            objs.resolve("$f2/$b").also(File::createNewFile)
                         )
                     )
                 }
         }
     }
 
-    suspend fun unzip(url: String, dst: String): File {
-        val dest = "$dst.zip"
-        val url = URL(url)
-        Downloader.download(DownloadJob(url, dest))
-
+    suspend fun check(target: LaunchTarget) {
         withContext(Dispatchers.IO) {
-            val zf = Static.root.resolve(dest)
-            val file = Static.root.resolve(dst).also(File::mkdirs)
-            val buf = byteArrayOf()
-            val zip = ZipInputStream(FileInputStream(zf))
-            var entry = zip.nextEntry
-            while (entry != null) {
-                val newFile: File = newFile(file, entry)
-                if (entry.isDirectory) {
-                    if (!newFile.isDirectory && !newFile.mkdirs()) {
-                        throw IOException("Failed to create directory $newFile")
-                    }
-                } else {
-                    // fix for Windows-created archives
-                    val parent = newFile.parentFile
-                    if (!parent.isDirectory && !parent.mkdirs()) {
-                        throw IOException("Failed to create directory $parent")
-                    }
+            launch {
+                val objects = assetIndex(target).getConfig("objects").root()
 
-                    // write file content
-                    val fos = FileOutputStream(newFile)
-                    var len: Int
-                    while (zip.read(buf).also { len = it } > 0) {
-                        fos.write(buf, 0, len)
-                    }
-                    fos.close()
+                for ((_, _info) in objects) {
+                    val info = _info.unwrapped().cast<Map<String, Any>>()
+
+                    val (h2, hash) = info["hash"]!!.toString().let { listOf(it.take(2), it) }
+                    val size = info["size"]!!.toString().toLong()
+
+                    val file = objs.resolve("$h2/$hash")
+                    if (file.isEmpty() || (file.length() != size).also { if (it) file.delete() }) Downloader.download(
+                        DownloadJob(URL("https://resources.download.minecraft.net/$h2/$hash"), file)
+                    )
                 }
-                entry = zip.nextEntry
             }
-            zip.closeEntry()
-            zip.close()
         }
-        return Static.root.resolve(dst)
-    }
-
-
-
-    @Throws(IOException::class)
-    fun newFile(destinationDir: File, zipEntry: ZipEntry): File {
-        val destFile = File(destinationDir, zipEntry.name)
-        val destDirPath = destinationDir.canonicalPath
-        val destFilePath = destFile.canonicalPath
-        if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw IOException("Entry is outside of the target dir: " + zipEntry.name)
-        }
-        return destFile
     }
 }

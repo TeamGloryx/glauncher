@@ -2,7 +2,6 @@
 
 package net.gloryx.glauncher.ui
 
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
@@ -23,11 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.zIndex
 import cat.try_
-import cat.ui.Suspend
 import cat.ui.dlg.*
 import catfish.winder.colors.Gray700
 import kotlinx.coroutines.launch
-import net.gloryx.glauncher.ui.Console.sb
+import net.gloryx.glauncher.ui.Console.scrollBack
 import net.gloryx.glauncher.util.GButton
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.VarOutputStream
@@ -55,7 +53,7 @@ object Console {
 
     val stream = VarOutputStream(textState)
 
-    internal var sb by State(false)
+    internal val scroll = ScrollState(0)
 
     inline fun send(message: Any?) {
         text += "\n$message"
@@ -76,26 +74,19 @@ object Console {
     @Suppress("nothing_to_inline") // stack length increases without inlining
     @PublishedApi
     internal inline fun locateClass() =
-        try_ { StackLocatorUtil.getCallerClass(1) }?.simpleName?.takeUnless(String::isEmpty) // try at depth 3 (e.g. normal class)
+        try_ { StackLocatorUtil.getCallerClass(1) }?.simpleName?.takeUnless(String::isEmpty) // try at depth 1 (e.g. normal class)
             ?: (try_ { StackLocatorUtil.getCallerClass(2) }?.simpleName?.takeUnless(String::isEmpty)
-                ?: "STDOUT") // try at depth 4 (anon class)
+                ?: "STDOUT") // try at depth 2 (anon class)
 
-    fun scrollToBottom() {
-        sb = true
+    suspend fun scrollBack() {
+        scroll.animateScrollTo(scroll.maxValue)
     }
 }
 
 @Composable
 fun ConsoleComponent() {
-    val scroll = rememberScrollState(0)
-
+    val scroll = forget { Console.scroll }
     val coro = currentCoroutine
-
-    suspend fun scrollBack() {
-        scroll.animateScrollTo(scroll.maxValue)
-    }
-
-    if (sb) coro.launch { scrollBack() }
 
     var dialog by Console.dialog
 
@@ -145,7 +136,7 @@ fun ConsoleComponent() {
     }
 
     if (Console.autoscroll) {
-        LaunchedEffect(Console.textState) {
+        LaunchedEffect(Console.text) {
             scrollBack()
         }
     }

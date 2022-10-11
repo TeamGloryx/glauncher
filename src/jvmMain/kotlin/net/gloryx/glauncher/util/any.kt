@@ -4,6 +4,7 @@ package net.gloryx.glauncher.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.Color
 import cat.i
 import cat.ui.dlg.getValue
@@ -20,6 +21,7 @@ import java.io.OutputStream
 import java.io.Reader
 import java.io.Writer
 import java.nio.ByteBuffer
+import java.util.LinkedList
 import kotlin.reflect.KProperty
 
 val Any?.void get() = Unit
@@ -89,6 +91,24 @@ class VarOutputStream(state: MutableState<String>) : OutputStream() {
 
     override fun flush() {
 
+    }
+
+    class List(val state: SnapshotStateList<String>) : Writer() {
+        override fun write(cbuf: CharArray, off: Int, len: Int) {
+            state.add(cbuf.concatToString())
+        }
+
+        override fun write(str: String, off: Int, len: Int) {
+            state.add(str)
+        }
+
+        override fun flush() {
+            // no-op
+        }
+
+        override fun close() {
+            // no-op, still write
+        }
     }
 }
 

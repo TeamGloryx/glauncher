@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.Static
+import net.gloryx.glauncher.util.isNotEmpty
 import net.gloryx.glauncher.util.plsCollect
 import net.gloryx.glauncher.util.rs
 import okhttp3.OkHttpClient
@@ -34,7 +35,7 @@ object Downloader {
     private suspend inline fun register() {
         downloads.plsCollect { job ->
             job.tryAwait()?.let {
-                if (job.destination.length() != 0L) return@plsCollect Console.warn("./${job.destination.rs} already exists")
+                if (job.destination.isNotEmpty()) return@plsCollect Console.warn("./${job.destination.rs} already exists")
                 Console.info("Url: \"${job.url}\"; Dst: \"./${job.destination.toRelativeString(Static.root)}\"")
                 downloader.launch {
                     it.body?.let { body ->

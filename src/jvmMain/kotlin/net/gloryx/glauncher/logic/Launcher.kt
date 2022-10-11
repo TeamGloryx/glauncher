@@ -1,10 +1,12 @@
 package net.gloryx.glauncher.logic
 
-import cat.async.await
+import cat.async.asDeferred
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOn
 import net.gloryx.glauncher.logic.jre.Jre
 import net.gloryx.glauncher.logic.target.LaunchTarget
+import net.gloryx.glauncher.logic.target.Instance
 import net.gloryx.glauncher.ui.Console
 import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.state.AuthState
@@ -39,9 +41,8 @@ object Launcher {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun start(target: LaunchTarget) {
-        val dir = target.dir.absolutePath
         val args = mutableListOf(Jre.javaExecOf(target).absolutePath)
 
         if (System.getProperty("os.name")
@@ -72,17 +73,19 @@ object Launcher {
         args += target.mcArgs
 
 
-        val proc = ProcessBuilder().command(args).directory(target.dir).inheritIO()
+        val proc = ProcessBuilder().command(args).directory(target.dir).redirectOutput(ProcessBuilder.Redirect.PIPE).redirectError(
+            ProcessBuilder.Redirect.PIPE).redirectInput(ProcessBuilder.Redirect.PIPE)
 
         Console.debug(args)
 
         withContext(Dispatchers.IO) {
             Static.process = proc.start().also {
-                launch {
-                    it.inputReader().asFlow().flowOn(Dispatchers.IO).writeTo(Console.stream.writer())
+                val writing = launch {
+                    it.inputReader().lineSequence().asFlow().flowOn(Dispatchers.IO.limitedParallelism(2)).writeTo(VarOutputStream.List(Instance.text))
                 }
                 launch {
-                    it.onExit().await()
+                    it.onExit().asDeferred().await().void
+                    writing.cancel("The process stopped.")
                     Static.process = null
                 }
             }

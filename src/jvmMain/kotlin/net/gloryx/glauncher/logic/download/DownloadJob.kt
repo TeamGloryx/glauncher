@@ -20,7 +20,7 @@ data class DownloadJob(val url: URL, val destination: File = Static.root.resolve
         get() = compl
 
     init {
-        if (destination.parentFile?.exists() == false) destination.parentFile?.mkdirs()
+        destination.parentFile?.mkdirs()
         if (!destination.exists())
             destination.createNewFile()
     }

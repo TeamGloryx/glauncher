@@ -2,9 +2,10 @@
 
 package net.gloryx.glauncher.util
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -15,10 +16,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.ExperimentalUnitApi
-import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.*
 import cat.f
 import cat.map
 import cat.ui.dlg.forget
@@ -27,6 +26,7 @@ import catfish.winder.colors.Black
 import catfish.winder.colors.Transparent
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import net.gloryx.glauncher.util.state.MainScreen
 import java.io.File
@@ -82,8 +82,8 @@ fun GTextButton(
 }
 
 @Composable
-fun <T : Any> getSuspend(fn: suspend () -> T, recomposer: Any? = true): MutableState<T?> =
-    useState<T?>(null).also { LaunchedEffect(recomposer) { it.set(fn()) } }
+fun <T : Any> suspendState(fn: suspend () -> T, recomposer: Any? = true): State<T?> =
+    MutableStateFlow<T?>(null).also { LaunchedEffect(recomposer) { it.emit(fn()) } }.collectAsState()
 
 object GColors {
     val snackbar = color(0x222222)
@@ -106,6 +106,9 @@ fun Modifier.useHeightRef(state: MutableState<Dp>) = onSizeChanged { (_, height)
 fun Modifier.useHeightRef(consumer: (Dp) -> Unit) = onSizeChanged { (_, height) -> consumer(height.dp) }
 fun Modifier.useWidthRef(state: MutableState<Dp>) = onSizeChanged { (width, _) -> state.value = width.dp }
 fun Modifier.useWidthRef(consumer: (Dp) -> Unit) = onSizeChanged { (width, _) -> consumer(width.dp) }
+
+@Composable
+inline fun <T> useDensity(block: Density.() -> T) = with(LocalDensity.current, block)
 
 @Composable
 fun GSlider(
@@ -152,12 +155,16 @@ val File.rs get() = toRelativeString(Static.root)
 inline fun forgetInteractionSource() = forget { MutableInteractionSource() }
 
 @Composable
-fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, color: Color = MaterialTheme.colors.secondary) = composed {
+fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, padding: Dp = 3.dp, color: Color = MaterialTheme.colors.secondary) = composed {
     val (height, setHeight) = useState(0.dp)
 
-    Modifier.useHeightRef(setHeight).padding(start = width + 3.dp)
+    Modifier.useHeightRef(setHeight)
         .drawBehind { drawLine(color, Offset(0f, take.toPx()), Offset(0f, height.toPx() - take.toPx()), width.toPx()) }
+        .padding(start = width + padding)
 }
+
+@Composable
+fun RowScope.VerticalEndSplitter(width: Dp, color: Color = MaterialTheme.colors.secondary) = Box(Modifier.fillMaxHeight().width(width).background(color))
 
 @Composable
 fun Modifier.horizontalSplitter(

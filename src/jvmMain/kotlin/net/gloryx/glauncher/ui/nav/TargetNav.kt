@@ -22,12 +22,13 @@ import catfish.winder.colors.Blue200
 import catfish.winder.colors.Blue500
 import catfish.winder.colors.Emerald200
 import catfish.winder.shapes.Round
+import net.gloryx.glauncher.logic.target.Instance
 import net.gloryx.glauncher.ui.settings.Settings
 import net.gloryx.glauncher.util.GTextButton
 import net.gloryx.glauncher.util.forgetInteractionSource
 
 object TargetState {
-    val entries = listOf(SelectTarget, Settings, Actions)
+    val entries = listOf(SelectTarget, Instance, Settings, Actions)
     var selected by State<Entry>(SelectTarget)
 
     abstract class Entry(val name: String) {

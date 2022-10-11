@@ -6,8 +6,10 @@ import cat.collections.findOneAndReplace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import net.gloryx.glauncher.logic.Launcher
 import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloading
@@ -25,8 +27,8 @@ import net.gloryx.glauncher.util.state.AuthState.ign
 import net.gloryx.glauncher.util.state.SettingsState
 import net.lingala.zip4j.ZipFile
 import java.io.File
-import java.io.FileInputStream
 import java.net.URL
+import kotlin.collections.addAll as plsAddAll
 
 private val json = Json {
     isLenient = true
@@ -47,26 +49,21 @@ enum class LaunchTarget(
         }
 
         override suspend fun install() {
-            Mods.Fabric("1.19.1").install(this)
+            Mods.Fabric("1.19.1").install()
         }
 
         override val verDir: String = "fabric-loader-0.14.9-1.19.1"
 
-        override val verFile: File = dir.resolve("$verDir/$verDir.jar")
-
-        override fun getCp(list: MutableList<String>, file: File) { // faster
-            list.addAll(mll.map { (a) -> file.resolve(a) }.filter { it.isNotEmpty() }.map(File::getAbsolutePath))
-        }
+        override val verFile: File = dir.resolve("versions/$verDir/$verDir.jar")
 
         override val classpath: MutableList<String> = run {
-            val list = mutableListOf<String>()
+            val list = mutableSetOf<String>()
 
-            getCp(list, libraries)
+            libraries.walkBottomUp().filter { it.isFile && it.extension == "jar" }.map(File::getAbsolutePath).let(list::plsAddAll)
 
-            list.add(verFile.absolutePath)
-            list.add(dir.resolve("$ver/$ver.jar").absolutePath)
+            list.add(dir.resolve("versions/$ver/$ver.jar").absolutePath)
 
-            list.distinct().toMutableList()
+            list.toMutableList()
         }
 
         override val mcArgs: MutableList<String>
