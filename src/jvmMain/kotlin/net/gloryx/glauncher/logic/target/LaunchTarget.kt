@@ -221,7 +221,7 @@ enum class LaunchTarget(
 
     val instances = ConfigFactory.parseResources("static/instance.conf")
 
-    open fun canBeDisplayed() = true
+    open fun canBeDisplayed() = this == SMP
 
     open suspend fun run() {}
 
