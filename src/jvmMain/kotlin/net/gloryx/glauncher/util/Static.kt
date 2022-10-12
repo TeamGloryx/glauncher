@@ -33,7 +33,7 @@ object Static {
         if (is32Bit) return@run 1024
         val os = ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
         os.totalMemorySize / 1e6
-    }.also(out::println).i.also(out::println)
+    }.i
 
     val osName = when (hostOs) {
         OS.Linux -> "linux"

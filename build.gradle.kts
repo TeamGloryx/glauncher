@@ -119,6 +119,18 @@ compose.desktop {
     application {
         mainClass = "LaunchKt"
         nativeDistributions {
+            modules(
+                "java.management",
+                "java.sql",
+                "jdk.httpserver",
+                "jdk.jfr",
+                "jdk.management",
+                "jdk.unsupported",
+                "jdk.unsupported.desktop",
+                "java.instrument",
+                "java.naming",
+                "jcef"
+            )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "glauncher"
             packageVersion = rootProject.version.toString()
