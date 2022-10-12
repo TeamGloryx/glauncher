@@ -2,10 +2,14 @@ package net.gloryx.glauncher.logic.target
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.capitalize
+import com.typesafe.config.ConfigFactory
 import cat.collections.findOneAndReplace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.hocon.Hocon
+import kotlinx.serialization.hocon.decodeFromConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
@@ -15,11 +19,13 @@ import net.gloryx.glauncher.logic.download.DownloadJob
 import net.gloryx.glauncher.logic.download.Downloading
 import net.gloryx.glauncher.logic.download.downloading
 import net.gloryx.glauncher.logic.jre.Jre
+import net.gloryx.glauncher.model.InstanceConf
 import net.gloryx.glauncher.model.LL
 import net.gloryx.glauncher.model.Mods
 import net.gloryx.glauncher.model.MojangLinker
 import net.gloryx.glauncher.ui.debug
 import net.gloryx.glauncher.util.*
+import net.gloryx.glauncher.util.nbt.ServersDatFile
 import net.gloryx.glauncher.util.res.lang.LocalLocale
 import net.gloryx.glauncher.util.res.paintable.P
 import net.gloryx.glauncher.util.state.AuthState.getUUID
@@ -44,12 +50,28 @@ enum class LaunchTarget(
         "1_19_1", "Survival", P.Main.survival, "fabric", "17"
     ) {
         private val mll = LL.nineteen.mapped.also(::debug)
+
+        @OptIn(ExperimentalSerializationApi::class)
+        val conf = Hocon.decodeFromConfig<InstanceConf>(instances.getConfig("smp")!!)
+
         override suspend fun run() {
             Launcher.start(this)
         }
 
+        override suspend fun Downloading.doMods() {
+            conf.mods.forEach {
+                download(DownloadJob(URL("${conf.url}/mods/$it"), dir.resolve("mods").mk().resolve(it)))
+            }
+        }
+
         override suspend fun install() {
             Mods.Fabric("1.19.1").install()
+
+            downloading {
+                doMods()
+            }
+
+            super.install()
         }
 
         override val verDir: String = "fabric-loader-0.14.9-1.19.1"
@@ -75,9 +97,9 @@ enum class LaunchTarget(
                     "--version",
                     ver,
                     "--gameDir",
-                    dir.rs,
+                    dir.absolutePath,
                     "--assetsDir",
-                    Assets.assets.rs,
+                    Assets.assets.absolutePath,
                     "--assetIndex",
                     "1.19",
                     "--uuid",
@@ -146,6 +168,8 @@ enum class LaunchTarget(
                     )
                 )
             }
+
+            super.install()
         }
 
         override val classpath: MutableList<String> = run {
@@ -195,14 +219,19 @@ enum class LaunchTarget(
         }
     };
 
+    val instances = ConfigFactory.parseResources("static/instance.conf")
+
     open fun canBeDisplayed() = true
 
     open suspend fun run() {}
 
-    open suspend fun install() {}
+    open suspend fun install() {
+        ServersDatFile.install(this)
+    }
 
     open suspend fun Downloading.doLibraries() {}
     open suspend fun Downloading.doNatives() {}
+    open suspend fun Downloading.doMods() {}
 
     val normalName = normalName ?: name.capitalize(LocalLocale)
 

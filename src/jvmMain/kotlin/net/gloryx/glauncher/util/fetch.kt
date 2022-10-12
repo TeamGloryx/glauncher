@@ -25,7 +25,7 @@ fun Response.json() = body?.string() ?: ""
 inline fun <reified T> String.asJson(json: Json = Json) = json.decodeFromString<T>(this)
 
 @Throws(IOException::class)
-suspend fun Call.await() = suspendCancellableCoroutine<Response> { continuation ->
+suspend fun Call.await() = suspendCancellableCoroutine { continuation ->
     enqueue(object : Callback {
         @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE") // I DON'T CARE!!!
         override fun onFailure(call: Call, rethrow: IOException) {

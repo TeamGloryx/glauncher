@@ -8,20 +8,11 @@ import androidx.compose.ui.text.platform.Font
 
 object Fonts {
     val fw = FontWeight
-    val Poppins = goof("poppins")
+    val Poppins = goof("poppins", *fw.all())
+    val JetbrainsMono = goof("jbm")
 
     fun goof(
-        font: String, vararg weight: FontWeight = arrayOf(
-            fw.W100,
-            fw.W200,
-            fw.W300,
-            fw.W400,
-            fw.W500,
-            fw.W600,
-            fw.W700,
-            fw.W800,
-            fw.W900
-        )
+        font: String, vararg weight: FontWeight = fw.almostAll()
     ) = FontFamily(weight.flatMap {
         listOf(
             Font("fonts/$font/${font.capitalize(Locale.current)}-${it.name}.ttf", it),
@@ -42,3 +33,16 @@ val FontWeight.name get() = when (weight) {
     900 -> "Black"
     else -> ""
 }
+
+inline fun FontWeight.Companion.almostAll() = arrayOf(
+    W100,
+    W200,
+    W300,
+    W400,
+    W500,
+    W600,
+    W700,
+    W800
+)
+
+inline fun FontWeight.Companion.all() = arrayOf(*almostAll(), W900)

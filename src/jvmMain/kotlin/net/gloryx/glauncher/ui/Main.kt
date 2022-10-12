@@ -30,7 +30,7 @@ import net.gloryx.glauncher.ui.nav.TargetNav
 import net.gloryx.glauncher.ui.nav.TargetState
 import net.gloryx.glauncher.ui.settings.Settings
 import net.gloryx.glauncher.util.GButton
-import net.gloryx.glauncher.util.GColors
+import net.gloryx.glauncher.util.ui.GColors
 import net.gloryx.glauncher.util.Static
 import net.gloryx.glauncher.util.res.lang.L
 import net.gloryx.glauncher.util.res.lang.from
@@ -104,7 +104,7 @@ fun Main() {
             }, isFloatingActionButtonDocked = true, floatingActionButton = {
                 GButton({
                     if (Static.process != null)
-                        coro.launch { withContext(Dispatchers.IO) { Static.process?.destroyForcibly() } }
+                        coro.launch { withContext(Dispatchers.IO) { Static.process?.destroy() } }
                     else
                         Launcher.play(MainScreen.selected)
                 }, {

@@ -2,15 +2,23 @@ package net.gloryx.glauncher.logic.target
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.structuralEqualityPolicy
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cat.ui.dlg.*
 import catfish.winder.colors.*
@@ -18,10 +26,11 @@ import kotlinx.coroutines.launch
 import net.gloryx.glauncher.logic.download.Downloading
 import net.gloryx.glauncher.ui.nav.TargetState
 import net.gloryx.glauncher.util.*
+import net.gloryx.glauncher.util.nbt.ServersDatFile
 import net.gloryx.glauncher.util.state.MainScreen
 import net.gloryx.glauncher.util.ui.GCheckbox
+import net.gloryx.glauncher.util.ui.GColors
 import net.gloryx.glauncher.util.ui.Spacing
-import cat.map
 
 @Suppress("nothing_to_inline")
 object Instance : TargetState.Entry("Instance") {
@@ -31,9 +40,23 @@ object Instance : TargetState.Entry("Instance") {
     val autoscroll = State(true)
     val wrap = State(true)
 
-    var currNav: Cfn by State(Nav.console)
+    var isConsoleAvailable by State(false, structuralEqualityPolicy())
+
+    var currNav: Cfn by State(Nav.actions)
 
     val Cfn.isSelected get() = currNav === this
+
+    fun onProc() {
+        if (!isSelected) select()
+
+        if (!Nav.console.isSelected) currNav = Nav.console
+
+        isConsoleAvailable = true
+    }
+
+    fun onProcStop() {
+        text.clear()
+    }
 
     object Nav {
         val console = @Composable {
@@ -53,8 +76,7 @@ object Instance : TargetState.Entry("Instance") {
 
                         //search
                         Row {
-                            TextField(
-                                search.value,
+                            TextField(search.value,
                                 search::set,
                                 Modifier.requiredHeight(60.dp).width(100.dp),
                                 singleLine = true,
@@ -84,18 +106,21 @@ object Instance : TargetState.Entry("Instance") {
                         }
                     }
                 }) { padding ->
-                    Row(Modifier.padding(padding).fillMaxWidth()) {
-                        SelectionContainer(Modifier.verticalScroll(scroll)) {
-                            OutlinedTextField(TextFieldValue(ct), {}, readOnly = true)
+                    Row(Modifier.padding(padding).fillMaxSize()) {
+                        SelectionContainer(Modifier.verticalScroll(scroll).weight(2f)) {
+                            useFont(Fonts.JetbrainsMono) {
+                                OutlinedTextField(
+                                    TextFieldValue(ct), {}, Modifier.weight(1f).fillMaxWidth(), true,
+                                    readOnly = true
+                                )
+                            }
                         }
 
                         VerticalScrollbar(
                             rememberScrollbarAdapter(scroll),
-                            Modifier.fillMaxHeight(),
+                            Modifier.fillMaxHeight().weight(1f),
                             style = defaultScrollbarStyle().copy(
-                                thickness = 10.dp,
-                                unhoverColor = Stone300,
-                                hoverColor = Stone700
+                                thickness = 10.dp, unhoverColor = Stone300, hoverColor = Stone700
                             )
                         )
                     }
@@ -112,6 +137,13 @@ object Instance : TargetState.Entry("Instance") {
             val coro = currentCoroutine
 
             Column {
+                center {
+                    Text(
+                        "Settings: ${selected.normalName}",
+                        Modifier.align(Alignment.CenterHorizontally),
+                        textAlign = TextAlign.Center
+                    )
+                }
                 Text("Assets")
                 Row(Modifier.verticalSplitter(4.dp, 1.dp, 8.dp, Teal400)) {
                     Button({
@@ -131,6 +163,34 @@ object Instance : TargetState.Entry("Instance") {
                     }) {
                         Text("Check libraries")
                     }
+                    Spacer(Spacing.Between.buttons)
+                    Button({
+                        coro.launch {
+                            selected.apply {
+                                Downloading().doMods()
+                            }
+                        }
+                    }) {
+                        Text("Check mods")
+                    }
+                    Spacer(Spacing.Between.buttons)
+                    GButton({
+                        coro.launch {
+                            selected.install()
+                        }
+                    }, colors = ButtonDefaults.buttonColors(Red500), icon = {
+                        Icon(Icons.Default.Warning, "Reinstall")
+                    }) {
+                        Text("Reinstall")
+                    }
+                    Spacer(Spacing.Between.buttons)
+                    GButton({
+                        coro.launch {
+                            ServersDatFile.install(selected)
+                        }
+                    }) {
+                        Text("Install servers.dat")
+                    }
                 }
             }
         }
@@ -142,6 +202,7 @@ object Instance : TargetState.Entry("Instance") {
     override fun render(padding: PaddingValues?) {
         Row {
             nav()
+
             Spacer(10.dp)
 
             currNav()
@@ -150,31 +211,30 @@ object Instance : TargetState.Entry("Instance") {
 
     val ColumnScope.divide: Unit
         @Composable get() {
-            Spacer(2.dp)
             Divider(color = Slate600)
         }
 
     @Composable
     inline fun nav() {
-        val clr = ButtonDefaults.buttonColors(Emerald400, Black, Lime600, Black)
+        val clr = GColors.InstanceScreen.drawerButton
+        val mod = Modifier.height(50.dp).fillMaxWidth().clipToBounds()
         Row(Modifier.width(120.dp)) {
             Column {
-                Button(
-                    {
-                        currNav = Nav.console
-                    },
-                    Modifier.fillMaxWidth(),
-                    !Nav.console.isSelected,
-                    colors = clr
-                ) {
-                    Text("Console")
-                }
+                if (isConsoleAvailable || (Static.process != null).useTruth { isConsoleAvailable = true }) {
+                    Button(
+                        {
+                            currNav = Nav.console
+                        }, mod, !Nav.console.isSelected, colors = clr, shape = RectangleShape
+                    ) {
+                        Text("Console")
+                    }
 
-                divide
+                    divide
+                }
 
                 Button({
                     currNav = Nav.actions
-                }, Modifier.fillMaxWidth(), !Nav.actions.isSelected, colors = clr) {
+                }, mod, !Nav.actions.isSelected, colors = clr, shape = RectangleShape) {
                     Text("Actions")
                 }
             }

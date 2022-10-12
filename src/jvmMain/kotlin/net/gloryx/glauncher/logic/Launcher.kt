@@ -8,6 +8,7 @@ import net.gloryx.glauncher.logic.jre.Jre
 import net.gloryx.glauncher.logic.target.LaunchTarget
 import net.gloryx.glauncher.logic.target.Instance
 import net.gloryx.glauncher.ui.Console
+import net.gloryx.glauncher.ui.nav.ifOpen
 import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.state.AuthState
 import org.jetbrains.skiko.hostOs
@@ -73,20 +74,25 @@ object Launcher {
         args += target.mcArgs
 
 
-        val proc = ProcessBuilder().command(args).directory(target.dir).redirectOutput(ProcessBuilder.Redirect.PIPE).redirectError(
-            ProcessBuilder.Redirect.PIPE).redirectInput(ProcessBuilder.Redirect.PIPE)
+        val proc = ProcessBuilder().command(args).directory(target.dir).redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectError(
+                ProcessBuilder.Redirect.PIPE
+            ).redirectInput(ProcessBuilder.Redirect.PIPE)
 
         Console.debug(args)
 
         withContext(Dispatchers.IO) {
             Static.process = proc.start().also {
+                Instance.onProc()
                 val writing = launch {
-                    it.inputReader().lineSequence().asFlow().flowOn(Dispatchers.IO.limitedParallelism(2)).writeTo(VarOutputStream.List(Instance.text))
+                    it.inputReader().lineSequence().asFlow().flowOn(Dispatchers.IO.limitedParallelism(2))
+                        .writeTo(VarOutputStream.List(Instance.text))
                 }
                 launch {
                     it.onExit().asDeferred().await().void
                     writing.cancel("The process stopped.")
                     Static.process = null
+                    Instance.onProcStop()
                 }
             }
         }

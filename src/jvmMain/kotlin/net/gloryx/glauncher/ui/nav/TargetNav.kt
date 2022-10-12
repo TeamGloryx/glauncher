@@ -55,6 +55,8 @@ object TargetState {
     }
 }
 
+fun <E : TargetState.Entry> E.ifOpen(block: E.() -> Unit): Unit? = if (isSelected) block() else null
+
 @Composable
 fun RowScope.TargetNav() {
     LazyRow(userScrollEnabled = false, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

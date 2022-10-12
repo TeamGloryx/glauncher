@@ -1,9 +1,32 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:7.2.0")
+    }
+}
+
+// Define task to obfuscate the JAR and output to <name>.min.jar
+tasks.register<proguard.gradle.ProGuardTask>("obfuscateCurrentOS") {
+    val packageUberJarForCurrentOS by tasks.getting
+    dependsOn(packageUberJarForCurrentOS)
+    val files = packageUberJarForCurrentOS.outputs.files
+    injars(files)
+    outjars(files.map { file -> File(file.parentFile, "${file.nameWithoutExtension}.min.jar") })
+
+    val library = if (System.getProperty("java.version").startsWith("1.")) "lib/rt.jar" else "jmods"
+    libraryjars("${System.getProperty("java.home")}/$library")
+
+    configuration("proguard-rules.pro")
+}
+
+
 plugins {
     kotlin("multiplatform")
     id("org.openjfx.javafxplugin") version "0.0.10"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.compose")
     kotlin("plugin.serialization")
     idea
@@ -35,6 +58,10 @@ dependencies {
     implementation("net.gloryx.cat:ui:$cat")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+    implementation("io.github.jglrxavpok.hephaistos:common:2.5.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:1.4.0")
 }
 
 kotlin {
@@ -78,7 +105,6 @@ kotlin {
                 implementation("org.jetbrains.compose.ui:ui-geometry-desktop:$composeVersion")
                 implementation("org.jetbrains.compose.foundation:foundation-desktop:$composeVersion")
                 implementation("net.gloryx.cat:ui-jvm:$cat")
-                implementation("org.python:jython:+")
                 implementation("org.apache.logging.log4j:log4j-core:2.19.0")
                 implementation("org.apache.logging.log4j:log4j-api:2.19.0")
                 implementation("net.lingala.zip4j:zip4j:2.11.2")

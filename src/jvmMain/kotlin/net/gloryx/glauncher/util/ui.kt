@@ -2,7 +2,6 @@
 
 package net.gloryx.glauncher.util
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,9 +13,22 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontSynthesis
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextGeometricTransform
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.*
 import cat.f
 import cat.map
@@ -53,8 +65,7 @@ fun ColumnScope.Spacer(height: Dp) = Spacer(Modifier.height(height))
 fun GButton(
     click: () -> Unit = {}, icon: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.buttonColors(), enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(30),
-    content: @Composable RowScope.() -> Unit = {}
+    shape: Shape = RoundedCornerShape(30), content: @Composable RowScope.() -> Unit = {}
 ) {
     Button(click, enabled = enabled, colors = colors, shape = shape, modifier = modifier) {
         icon?.let {
@@ -69,8 +80,7 @@ fun GButton(
 fun GTextButton(
     click: () -> Unit = {}, icon: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.buttonColors(Transparent, Black, Transparent, Black), enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(30),
-    content: @Composable RowScope.() -> Unit = {}
+    shape: Shape = RoundedCornerShape(30), content: @Composable RowScope.() -> Unit = {}
 ) {
     TextButton(click, modifier, enabled, colors = colors, shape = shape) {
         icon?.let {
@@ -84,10 +94,6 @@ fun GTextButton(
 @Composable
 fun <T : Any> suspendState(fn: suspend () -> T, recomposer: Any? = true): State<T?> =
     MutableStateFlow<T?>(null).also { LaunchedEffect(recomposer) { it.emit(fn()) } }.collectAsState()
-
-object GColors {
-    val snackbar = color(0x222222)
-}
 
 fun snackbar(
     message: String, dismissButton: String = "Dismiss", duration: SnackbarDuration = SnackbarDuration.Short,
@@ -112,26 +118,20 @@ inline fun <T> useDensity(block: Density.() -> T) = with(LocalDensity.current, b
 
 @Composable
 fun GSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     /*@IntRange(from = 0)*/
-    steps: Int = 0,
-    onValueChangeFinished: (() -> Unit)? = null,
+    steps: Int = 0, onValueChangeFinished: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     colors: SliderColors = SliderDefaults.colors()
 ) = Slider(value, onValueChange, modifier, enabled, valueRange, steps, onValueChangeFinished, interactionSource, colors)
 
 @Composable
 fun GSlider(
-    state: MutableState<Float>, modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    state: MutableState<Float>, modifier: Modifier = Modifier, enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     /*@IntRange(from = 0)*/
-    steps: Int = 0,
-    onValueChangeFinished: (() -> Unit)? = null,
+    steps: Int = 0, onValueChangeFinished: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     colors: SliderColors = SliderDefaults.colors()
 ) = GSlider(
@@ -155,7 +155,9 @@ val File.rs get() = toRelativeString(Static.root)
 inline fun forgetInteractionSource() = forget { MutableInteractionSource() }
 
 @Composable
-fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, padding: Dp = 3.dp, color: Color = MaterialTheme.colors.secondary) = composed {
+fun Modifier.verticalSplitter(
+    width: Dp, take: Dp = 1.dp, padding: Dp = 3.dp, color: Color = MaterialTheme.colors.secondary
+) = composed {
     val (height, setHeight) = useState(0.dp)
 
     Modifier.useHeightRef(setHeight)
@@ -164,7 +166,8 @@ fun Modifier.verticalSplitter(width: Dp, take: Dp = 1.dp, padding: Dp = 3.dp, co
 }
 
 @Composable
-fun RowScope.VerticalEndSplitter(width: Dp, color: Color = MaterialTheme.colors.secondary) = Box(Modifier.fillMaxHeight().width(width).background(color))
+fun RowScope.VerticalEndSplitter(width: Dp, color: Color = MaterialTheme.colors.secondary) =
+    Box(Modifier.fillMaxHeight().width(width).background(color))
 
 @Composable
 fun Modifier.horizontalSplitter(
@@ -175,11 +178,9 @@ fun Modifier.horizontalSplitter(
 
     Modifier.useWidthRef(setWidth).then(
         after.map(
-            Modifier.useHeightRef(setH).padding(end = height - take),
-            Modifier.padding(top = height + take)
+            Modifier.useHeightRef(setH).padding(end = height - take), Modifier.padding(top = height + take)
         )
-    )
-        .drawBehind {
+    ).drawBehind {
             drawLine(
                 color,
                 Offset(take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
@@ -188,3 +189,53 @@ fun Modifier.horizontalSplitter(
             )
         }
 }
+
+@Composable
+inline fun center(crossinline block: Cfn) = ProvideTextStyle(TextStyle(textAlign = TextAlign.Center)) {
+    block()
+}
+
+@Composable
+inline fun useTextStyle(
+    color: Color = LocalTextStyle.current.color, fontSize: TextUnit = LocalTextStyle.current.fontSize,
+    fontWeight: FontWeight? = LocalTextStyle.current.fontWeight,
+    fontStyle: FontStyle? = LocalTextStyle.current.fontStyle,
+    fontSynthesis: FontSynthesis? = LocalTextStyle.current.fontSynthesis,
+    fontFamily: FontFamily? = LocalTextStyle.current.fontFamily,
+    fontFeatureSettings: String? = LocalTextStyle.current.fontFeatureSettings,
+    letterSpacing: TextUnit = LocalTextStyle.current.letterSpacing,
+    baselineShift: BaselineShift? = LocalTextStyle.current.baselineShift,
+    textGeometricTransform: TextGeometricTransform? = LocalTextStyle.current.textGeometricTransform,
+    localeList: LocaleList? = LocalTextStyle.current.localeList, background: Color = LocalTextStyle.current.background,
+    textDecoration: TextDecoration? = LocalTextStyle.current.textDecoration,
+    shadow: Shadow? = LocalTextStyle.current.shadow, textAlign: TextAlign? = LocalTextStyle.current.textAlign,
+    textDirection: TextDirection? = LocalTextStyle.current.textDirection,
+    lineHeight: TextUnit = LocalTextStyle.current.lineHeight,
+    textIndent: TextIndent? = LocalTextStyle.current.textIndent, crossinline block: Cfn
+) = ProvideTextStyle(
+    TextStyle(
+        color,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        fontSynthesis,
+        fontFamily,
+        fontFeatureSettings,
+        letterSpacing,
+        baselineShift,
+        textGeometricTransform,
+        localeList,
+        background,
+        textDecoration,
+        shadow,
+        textAlign,
+        textDirection,
+        lineHeight,
+        textIndent
+    )
+) {
+    block()
+}
+
+@Composable
+inline fun useFont(font: FontFamily, crossinline block: Cfn) = useTextStyle(fontFamily = font, block = block)

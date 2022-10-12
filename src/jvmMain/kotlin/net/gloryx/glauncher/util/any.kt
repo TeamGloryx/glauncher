@@ -5,23 +5,18 @@ package net.gloryx.glauncher.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.graphics.Color
 import cat.i
 import cat.ui.dlg.getValue
 import cat.ui.dlg.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.newCoroutineContext
-import net.gloryx.glauncher.logic.download.Downloader
-import okio.source
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.Reader
 import java.io.Writer
 import java.nio.ByteBuffer
-import java.util.LinkedList
 import kotlin.reflect.KProperty
 
 val Any?.void get() = Unit
@@ -128,3 +123,7 @@ suspend fun Flow<Byte>.copyTo(out: OutputStream, on: suspend (Int, Byte) -> Unit
 
 inline fun <T> MutableState<T>.get() = value
 fun <T> MutableState<T>.set(value: T) = also { it.value = value }
+
+inline fun Boolean.useTruth(block: () -> Unit) = if (this) { block(); true } else false
+
+inline fun File.alsoCreate() = also(File::createNewFile)

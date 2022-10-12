@@ -27,8 +27,8 @@ object Static {
     var window: ComposeWindow? = null
     lateinit var scope: CoroutineScope
 
-    const val doAuth = false
-    val assetsDir get() = root.resolve("assets").absolutePath
+    const val doAuth = true
+
     val physicalMemory = run {
         if (is32Bit) return@run 1024
         val os = ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
