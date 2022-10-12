@@ -1,3 +1,4 @@
+import org.jetbrains.compose.*
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 buildscript {
@@ -47,7 +48,7 @@ val kotlinVersion = extra["kotlin.version"] as String
 repositories {
     google()
     mavenCentral()
-    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    jetbrainsCompose()
     maven("https://dev.gloryx.net/main")
     maven("https://dev.gloryx.net/snap")
     maven("https://repo.u-team.info")
@@ -101,9 +102,9 @@ kotlin {
                 implementation("at.favre.lib:bcrypt:0.9.0")
                 implementation("me.nullicorn:ms-to-mca:0.0.1")
                 implementation("com.microsoft.azure:msal4j:1.10.1")
-                implementation("org.jetbrains.compose.ui:ui-graphics-desktop:$composeVersion")
-                implementation("org.jetbrains.compose.ui:ui-geometry-desktop:$composeVersion")
-                implementation("org.jetbrains.compose.foundation:foundation-desktop:$composeVersion")
+                compose("org.jetbrains.compose.ui:ui-graphics-desktop")
+                compose("org.jetbrains.compose.ui:ui-geometry-desktop")
+                compose("org.jetbrains.compose.foundation:foundation-desktop")
                 implementation("net.gloryx.cat:ui-jvm:$cat")
                 implementation("org.apache.logging.log4j:log4j-core:2.19.0")
                 implementation("org.apache.logging.log4j:log4j-api:2.19.0")
