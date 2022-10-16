@@ -57,7 +57,9 @@ object AuthState {
                     .firstOrNull()
             }
             if (isPrem && pr != null) {
+
                 val at = Microsoft.accessToken()
+                at
                 coro.launch {
                     val resp =
                         ConfigFactory.parseString(fetch("https://api.minecraftservices.com/minecraft/profile") {
@@ -69,10 +71,7 @@ object AuthState {
 
                     if (resp.hasPath("error")) throw NotAuthenticatedException()
 
-                    if (resp.getString("id") != pr[AuthTable.premiumUuid].toString()
-                            .replace("-", "")
-                    ) println(pr)
-                    println(resp)
+                    accessToken = at.value
                 }
             } else {
                 val hash = hasher.hashToString(10, pwd.toCharArray())

@@ -143,10 +143,14 @@ object Microsoft {
 
         override fun afterCacheAccess(ac: ITokenCacheAccessContext) {
             ac.tokenCache().deserialize(data)
+            ac.prn()
         }
 
         override fun beforeCacheAccess(ac: ITokenCacheAccessContext) {
             data = ac.tokenCache().serialize()
+            ac.prn()
         }
     }
 }
+
+inline fun ITokenCacheAccessContext.prn() = println("ITokenCacheAccessContent{account=${account()},tokenCache=${(tokenCache().serialize())},clientId=${clientId()},hasCacheChanged=${hasCacheChanged()}")
