@@ -135,8 +135,7 @@ compose.desktop {
                 "jdk.unsupported",
                 "jdk.unsupported.desktop",
                 "java.instrument",
-                "java.naming",
-                "jcef"
+                "java.naming"
             )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "glauncher"
