@@ -31,7 +31,10 @@ plugins {
     id("org.jetbrains.compose")
     kotlin("plugin.serialization")
     idea
+    java
 }
+
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 
 idea {
     module {
