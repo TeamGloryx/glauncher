@@ -33,22 +33,6 @@ import net.gloryx.glauncher.util.state.AuthState
 import java.math.BigInteger
 
 object Actions : TargetState.Entry("Debug") {
-    fun x(w: BigInteger): Lazy<List<BigInteger>> = lazy {
-        var x = w
-        val ls = mutableListOf<BigInteger>()
-
-        while (x != BigInteger.ONE) {
-            val y = if (x % BigInteger.TWO == BigInteger.ZERO) x / bi(2) else x * bi(3) + bi(1)
-            x = y
-            ls.add(y)
-        }
-
-        ls
-    }
-
-    @Suppress("nothing_to_inline")
-    inline fun bi(number: Number): BigInteger = BigInteger.valueOf(number.l)
-
     @Composable
     override fun render(padding: PaddingValues?) {
         val coro = rememberCoroutineScope()

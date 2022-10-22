@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import cat.ui.dlg.*
@@ -45,7 +46,9 @@ fun RealAuth() {
     MaterialTheme(Static.colors) {
         Box(Modifier.background(MaterialTheme.colors.background).fillMaxSize()) {
             Column {
-                Text("Authenticate here.")
+                center {
+                    Text("Authenticate here.", Modifier.align(Alignment.CenterHorizontally))
+                }
                 TextField(nowIgn ?: "", {
                     nowIgn = if (it.isNotBlank())
                         it.take(64)

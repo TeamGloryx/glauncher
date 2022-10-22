@@ -2,6 +2,8 @@ package net.gloryx.glauncher.logic.target
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
@@ -24,6 +26,7 @@ import cat.ui.dlg.*
 import catfish.winder.colors.*
 import kotlinx.coroutines.launch
 import net.gloryx.glauncher.logic.download.Downloading
+import net.gloryx.glauncher.logic.jre.Jre
 import net.gloryx.glauncher.ui.nav.TargetState
 import net.gloryx.glauncher.util.*
 import net.gloryx.glauncher.util.nbt.ServersDatFile
@@ -94,7 +97,7 @@ object Instance : TargetState.Entry("Instance") {
                                 Text("Find")
                             }
 
-                            Spacer(Spacing.Between.buttons)
+                            
 
                             Button({
                                 coro.launch {
@@ -144,8 +147,8 @@ object Instance : TargetState.Entry("Instance") {
                         textAlign = TextAlign.Center
                     )
                 }
-                Text("Assets")
-                Row(Modifier.verticalSplitter(4.dp, 1.dp, 8.dp, Teal400)) {
+                Text("Revalidation")
+                LazyVerticalGrid(GridCells.Adaptive(300.dp), Modifier.verticalSplitter(4.dp, 1.dp, 8.dp, Teal400), horizontalArrangement = Arrangement.spacedBy(Spacing.Between.buttons)) {
                     Button({
                         coro.launch {
                             Assets.check(selected)
@@ -153,7 +156,7 @@ object Instance : TargetState.Entry("Instance") {
                     }) {
                         Text("Check assets")
                     }
-                    Spacer(Spacing.Between.buttons)
+                    
                     Button({
                         coro.launch {
                             selected.apply {
@@ -163,7 +166,7 @@ object Instance : TargetState.Entry("Instance") {
                     }) {
                         Text("Check libraries")
                     }
-                    Spacer(Spacing.Between.buttons)
+                    
                     Button({
                         coro.launch {
                             selected.apply {
@@ -173,7 +176,23 @@ object Instance : TargetState.Entry("Instance") {
                     }) {
                         Text("Check mods")
                     }
-                    Spacer(Spacing.Between.buttons)
+                    
+                    GButton({
+                        coro.launch {
+                            ServersDatFile.install(selected)
+                        }
+                    }) {
+                        Text("Install servers.dat")
+                    }
+                    
+                    GButton({
+                        coro.launch {
+                            Jre.download(selected)
+                        }
+                    }) {
+                        Text("Check & install Java {JRE v${selected.javaVersion}}")
+                    }
+                    
                     GButton({
                         coro.launch {
                             selected.install()
@@ -182,14 +201,6 @@ object Instance : TargetState.Entry("Instance") {
                         Icon(Icons.Default.Warning, "Reinstall")
                     }) {
                         Text("Reinstall")
-                    }
-                    Spacer(Spacing.Between.buttons)
-                    GButton({
-                        coro.launch {
-                            ServersDatFile.install(selected)
-                        }
-                    }) {
-                        Text("Install servers.dat")
                     }
                 }
             }
