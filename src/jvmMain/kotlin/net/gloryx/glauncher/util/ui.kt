@@ -3,11 +3,23 @@
 package net.gloryx.glauncher.util
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
@@ -15,6 +27,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.PointerIconDefaults
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -22,6 +37,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
@@ -30,17 +47,15 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.*
+import catfish.winder.colors.*
 import cat.f
 import cat.map
-import cat.ui.dlg.forget
-import cat.ui.dlg.useState
-import catfish.winder.colors.Black
-import catfish.winder.colors.Transparent
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import net.gloryx.glauncher.util.state.MainScreen
+import cat.ui.dlg.*
 import java.io.File
 
 typealias Cfn = @Composable () -> Unit
@@ -181,13 +196,13 @@ fun Modifier.horizontalSplitter(
             Modifier.useHeightRef(setH).padding(end = height - take), Modifier.padding(top = height + take)
         )
     ).drawBehind {
-            drawLine(
-                color,
-                Offset(take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
-                Offset(width.toPx() - take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
-                height.toPx()
-            )
-        }
+        drawLine(
+            color,
+            Offset(take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
+            Offset(width.toPx() - take.toPx(), after.map(h.toPx() + take.toPx(), 0f)),
+            height.toPx()
+        )
+    }
 }
 
 @Composable
@@ -239,3 +254,59 @@ inline fun useTextStyle(
 
 @Composable
 inline fun useFont(font: FontFamily, crossinline block: Cfn) = useTextStyle(fontFamily = font, block = block)
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun PasswordTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    textStyle: TextStyle = LocalTextStyle.current,
+    label: @Composable (() -> Unit)? = null,
+    placeholder: @Composable (() -> Unit)? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    isError: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    singleLine: Boolean = false,
+    maxLines: Int = Int.MAX_VALUE,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    shape: Shape =
+        MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
+    colors: TextFieldColors = TextFieldDefaults.textFieldColors()
+) {
+    var didClick by useState(false)
+    TextField(
+        value,
+        onValueChange,
+        modifier,
+        enabled,
+        readOnly,
+        textStyle,
+        label,
+        placeholder,
+        leadingIcon,
+        trailingIcon.let {
+            @Composable {
+                it?.invoke()
+
+                Icon(
+                    Icons.Default.Face,
+                    "Show password",
+                    Modifier.clickable { didClick = !didClick }.pointerHoverIcon(PointerIconDefaults.Hand), tint = didClick.map(Green600, White))
+            }
+        },
+        isError,
+        didClick.map(VisualTransformation.None, PasswordVisualTransformation()),
+        keyboardOptions,
+        keyboardActions,
+        singleLine,
+        maxLines,
+        interactionSource,
+        shape,
+        colors
+    )
+}

@@ -56,10 +56,8 @@ object AuthState {
                 AuthTable.select(AuthTable.premiumUuid neq null and (AuthTable.nickname eq currIgn!!))
                     .firstOrNull()
             }
-            if (isPrem && pr != null) {
-
+            if (isPrem) {
                 val at = Microsoft.accessToken()
-                at
                 coro.launch {
                     val resp =
                         ConfigFactory.parseString(fetch("https://api.minecraftservices.com/minecraft/profile") {
@@ -74,15 +72,16 @@ object AuthState {
                     accessToken = at.value
                 }
             } else {
+                if (pr != null) throw NotAuthenticatedException("Log in as premium!")
                 val hash = hasher.hashToString(10, pwd.toCharArray())
                 val currHash = transaction(DB.Sql.db) {
                     AuthTable.select((AuthTable.nickname eq currIgn!!)).toList().also(::println)
                         .firstOrNull()
                         ?.get(AuthTable.hash).takeUnless { it.isNullOrBlank() }
-                } ?: return println("Nope")
+                } ?: throw NotAuthenticatedException("Account \"$currIgn\" does not exist!")
                 if (verifier.verify(pwd.toCharArray(), currHash.toCharArray()).verified) {
                     AuthState.hash = hash
-                } else return println("Nope")
+                } else throw NotAuthenticatedException("Incorrect password!")
             }
         }
         ign = currIgn
