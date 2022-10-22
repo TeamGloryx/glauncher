@@ -97,7 +97,7 @@ object Instance : TargetState.Entry("Instance") {
                                 Text("Find")
                             }
 
-                            
+
 
                             Button({
                                 coro.launch {
@@ -113,8 +113,7 @@ object Instance : TargetState.Entry("Instance") {
                         SelectionContainer(Modifier.verticalScroll(scroll).weight(2f)) {
                             useFont(Fonts.JetbrainsMono) {
                                 OutlinedTextField(
-                                    TextFieldValue(ct), {}, Modifier.weight(1f).fillMaxWidth(), true,
-                                    readOnly = true
+                                    TextFieldValue(ct), {}, Modifier.weight(1f).fillMaxWidth(), true, readOnly = true
                                 )
                             }
                         }
@@ -148,59 +147,79 @@ object Instance : TargetState.Entry("Instance") {
                     )
                 }
                 Text("Revalidation")
-                LazyVerticalGrid(GridCells.Adaptive(300.dp), Modifier.verticalSplitter(4.dp, 1.dp, 8.dp, Teal400), horizontalArrangement = Arrangement.spacedBy(Spacing.Between.buttons)) {
-                    Button({
-                        coro.launch {
-                            Assets.check(selected)
-                        }
-                    }) {
-                        Text("Check assets")
-                    }
-                    
-                    Button({
-                        coro.launch {
-                            selected.apply {
-                                Downloading().doLibraries()
+                LazyVerticalGrid(
+                    GridCells.Adaptive(300.dp),
+                    Modifier.verticalSplitter(4.dp, 1.dp, 8.dp, Teal400),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Between.buttons)
+                ) {
+                    item {
+                        Button({
+                            coro.launch {
+                                Assets.check(selected)
                             }
+                        }) {
+                            Text("Check assets")
                         }
-                    }) {
-                        Text("Check libraries")
                     }
-                    
-                    Button({
-                        coro.launch {
-                            selected.apply {
-                                Downloading().doMods()
+
+                    item {
+                        Button({
+                            coro.launch {
+                                selected.apply {
+                                    Downloading().doLibraries()
+                                }
                             }
+                        }) {
+                            Text("Check libraries")
                         }
-                    }) {
-                        Text("Check mods")
                     }
-                    
-                    GButton({
-                        coro.launch {
-                            ServersDatFile.install(selected)
+
+                    item {
+
+                        Button({
+                            coro.launch {
+                                selected.apply {
+                                    Downloading().doMods()
+                                }
+                            }
+                        }) {
+                            Text("Check mods")
                         }
-                    }) {
-                        Text("Install servers.dat")
                     }
-                    
-                    GButton({
-                        coro.launch {
-                            Jre.download(selected)
+
+                    item {
+                        GButton({
+                            coro.launch {
+                                ServersDatFile.install(selected)
+                            }
+                        }) {
+                            Text("Install servers.dat")
                         }
-                    }) {
-                        Text("Check & install Java {JRE v${selected.javaVersion}}")
                     }
-                    
-                    GButton({
-                        coro.launch {
-                            selected.install()
+
+                    item {
+
+                        GButton({
+                            coro.launch {
+                                Jre.download(selected)
+                            }
+                        }) {
+                            Text("Check & install Java {JRE v${selected.javaVersion}}")
                         }
-                    }, colors = ButtonDefaults.buttonColors(Red500), icon = {
-                        Icon(Icons.Default.Warning, "Reinstall")
-                    }) {
-                        Text("Reinstall")
+
+                    }
+
+                    item {
+
+                        GButton({
+                            coro.launch {
+                                selected.install()
+                            }
+                        }, colors = ButtonDefaults.buttonColors(Red500), icon = {
+                            Icon(Icons.Default.Warning, "Reinstall")
+                        }) {
+                            Text("Reinstall")
+                        }
                     }
                 }
             }
